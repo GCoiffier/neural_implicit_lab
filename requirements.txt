@@ -1,0 +1,6 @@
+numpy
+scipy
+scikit-image
+mouette
+torch>=2.7.1
+libigl==2.6.1

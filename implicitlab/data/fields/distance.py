@@ -1,0 +1,120 @@
+import igl
+import mouette as M
+import numpy as np
+from base import FieldGenerator, UnsupportedDimensionError, UnsupportedGeometryFormat
+from utils import pseudo_surface_from_polyline
+from scipy.spatial import KDTree
+
+
+def Distance(dim: int, geom: M.mesh.Mesh, signed: bool = True, square: bool = False):
+    if dim==2:
+        if isinstance(geom, M.mesh.PolyLine):
+            return _Distance2D(geom, signed, square)
+        elif isinstance(geom, M.mesh.PointCloud):
+            return _Distance2DPointCloud(geom, signed, square)
+        raise UnsupportedGeometryFormat(type(geom))
+
+    elif dim==3:
+        if isinstance(geom, M.mesh.SurfaceMesh):
+            return _Distance3D(geom, signed, square)
+        elif isinstance(geom, M.mesh.PolyLine):
+            return _Distance3DPolyline(geom, signed, square)
+        elif isinstance(geom, M.mesh.PointCloud):
+            return _Distance3DPointCloud(geom, signed, square)
+        raise UnsupportedGeometryFormat(type(geom))
+    
+    raise UnsupportedDimensionError(dim)
+
+#######################################################################################
+
+class _BaseDistance(FieldGenerator):
+    def __init__(self, signed, square):
+        super().__init__()
+        self.signed : bool = signed
+        self.square : bool = square
+
+    def _apply_distance_modifier(self, d):
+        if not self.signed:
+            d = np.abs(d)
+        if self.square:
+            d = d**2
+        return d
+
+#######################################################################################
+
+class _Distance2DPointCloud(_BaseDistance):
+    def __init__(self,
+        pc: M.mesh.PointCloud,
+        signed: bool,
+        square: bool
+    ):
+        super().__init__(signed, square)
+        self.tree = KDTree(np.asarray(pc.vertices)[:,:2])
+    
+    def compute(self, query: np.ndarray) -> np.ndarray:
+        distance = self.tree.query(query)[0]
+        return self._apply_distance_modifier(distance)
+
+#######################################################################################
+
+class _Distance2D(_BaseDistance):
+    def __init__(self, 
+        polyline: M.mesh.PolyLine, 
+        signed: bool, 
+        square: bool
+    ):
+        super().__init__(signed, square)
+        self.V, self.F = pseudo_surface_from_polyline(polyline)
+    
+    def compute(self, query: np.ndarray) -> np.ndarray: 
+        if query.shape[1]==2:
+            query = np.pad(query, ((0,0),(0,1))) # make the points 3D
+        distance = igl.signed_distance(query, self.V, self.F)[0]
+        return self._apply_distance_modifier(distance)
+
+#######################################################################################
+
+class _Distance3D(_BaseDistance):
+    
+    def __init__(self, 
+        mesh: M.mesh.SurfaceMesh,
+        signed: bool,
+        square: bool
+    ):
+        super().__init__(signed, square)
+        self.V = np.asarray(mesh.vertices)
+        self.F = np.asarray(mesh.faces, dtype=int)
+
+    def compute(self, query : np.ndarray) -> np.ndarray:
+        distance = igl.signed_distance(query, self.V, self.F)
+        return self._apply_distance_modifier(distance)
+
+
+#######################################################################################
+
+class _Distance3DPolyline(_BaseDistance):
+
+    def __init__(self, pl: M.mesh.PolyLine, square: bool):
+        super().__init__(True, square)
+        self.pl = pl
+        V = M.sampling.sample_polyline(self.pl, 100*len(self.pl.edges))
+        self.tree = KDTree(V)
+    
+    def compute(self, query: np.ndarray) -> np.ndarray:
+        distance = self.tree.query(query)[0]
+        return self._apply_distance_modifier(distance)
+
+#######################################################################################
+
+class _Distance3DPointCloud(_BaseDistance):
+    def __init__(self, pc : M.mesh.PointCloud, square: bool):
+        super().__init__(True, square)
+        self.pc = pc
+        self.tree = KDTree(self.pc.vertices)
+    
+    def compute(self, query: np.ndarray) -> np.ndarray:
+        distance = self.tree.query(query)[0]
+        return self._apply_distance_modifier(distance)
+    
+#######################################################################################
+
