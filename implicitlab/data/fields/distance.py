@@ -1,29 +1,26 @@
 import igl
 import mouette as M
 import numpy as np
-from base import FieldGenerator, UnsupportedDimensionError, UnsupportedGeometryFormat
-from utils import pseudo_surface_from_polyline
 from scipy.spatial import KDTree
 
+from .base import FieldGenerator, UnsupportedGeometryFormat
+from .utils import pseudo_surface_from_polyline
+from ..geometry import GeometryType
 
-def Distance(dim: int, geom: M.mesh.Mesh, signed: bool = True, square: bool = False):
-    if dim==2:
-        if isinstance(geom, M.mesh.PolyLine):
+def Distance(geom: M.mesh.Mesh, signed: bool = True, square: bool = False):
+    match geom.geom_type:
+        case GeometryType.POLYLINE_2D:
             return _Distance2D(geom, signed, square)
-        elif isinstance(geom, M.mesh.PointCloud):
+        case GeometryType.POINT_CLOUD_2D:
             return _Distance2DPointCloud(geom, signed, square)
-        raise UnsupportedGeometryFormat(type(geom))
-
-    elif dim==3:
-        if isinstance(geom, M.mesh.SurfaceMesh):
+        case GeometryType.SURFACE_MESH_3D:
             return _Distance3D(geom, signed, square)
-        elif isinstance(geom, M.mesh.PolyLine):
+        case GeometryType.POLYLINE_3D:
             return _Distance3DPolyline(geom, signed, square)
-        elif isinstance(geom, M.mesh.PointCloud):
+        case GeometryType.POINT_CLOUD_3D:
             return _Distance3DPointCloud(geom, signed, square)
-        raise UnsupportedGeometryFormat(type(geom))
-    
-    raise UnsupportedDimensionError(dim)
+        case _:
+            raise UnsupportedGeometryFormat(geom.geom_type)
 
 #######################################################################################
 
@@ -39,6 +36,9 @@ class _BaseDistance(FieldGenerator):
         if self.square:
             d = d**2
         return d
+    
+    def compute_on(self, query: np.ndarray) -> np.ndarray:
+        return np.zeros(query.shape[0])
 
 #######################################################################################
 

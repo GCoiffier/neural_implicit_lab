@@ -1,1 +1,0 @@
-from .neural_sdf import NeuralDistanceField

@@ -4,32 +4,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from deel import torchlip
 
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-
-def save_model(model, path):
-    data = { "id": model.id, "meta" : model.meta, "state_dict" : model.state_dict()}
-    torch.save(data, path)
-    
-
-def load_model(path, device:str):
-    data = torch.load(path, map_location=device)
-    model_type = data.get("id","Spectral")
-    if model_type == "SDP":
-        model = DenseSDP(*data["meta"])
-    else:
-        raise Exception(f"Model type {model_type} not recognized")
-    model.load_state_dict(data["state_dict"])
-    return model.to(device)
-
-
 def safe_inv(x):
     mask = x == 0
     x_inv = x ** (-1)
     x_inv[mask] = 0
     return x_inv
-
 
 class SDPBasedLipschitzDense(nn.Module):
 

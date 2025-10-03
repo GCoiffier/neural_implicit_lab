@@ -6,3 +6,4 @@ torch>=2.7.1
 libigl==2.6.1
 triangle
 tqdm
+deel-torchlip
