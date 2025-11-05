@@ -5,9 +5,11 @@ from collections import deque
 from tqdm import trange
 from scipy.spatial import KDTree
 
-def pseudo_surface_from_polyline(pl):
-    """The signed distance function of libigl only works in 3D. Since I am too lazy to code an equivalent function for 2D inputs, this function transforms the 2D polyline into a 3D surface by linking each edge (a,b) to two far away points Z+ and Z- to form two triangles.
+def pseudo_surface_from_polyline(pl: M.mesh.PolyLine):
+    """Transforms a 2D polyline into a closed 3D surface by linking each edge (a,b) to two far away points Z+ and Z- to form two triangles.
 
+    This function exists because the signed distance function of libigl only works in 3D. Since I am too lazy to code an equivalent function for 2D inputs, I just transform the 2D output in an equivalent 3D one.
+    
     Args:
         pl (M.mesh.PolyLine): input polyline
 
@@ -35,6 +37,31 @@ def pseudo_surface_from_polyline(pl):
     if volume<0:
         F = [(b,a,c) for (a,b,c) in F] # change order of faces
     return np.array(V), np.array(F, dtype=int)
+
+def extrude_2D_polyline(pl : M.mesh.PolyLine, z: float =1.):
+    """Extrudes a 2D polyline along the z axis to form a ribbon mesh.
+
+    This function exists because the signed distance function of libigl only works in 3D. Since I am too lazy to code an equivalent function for 2D inputs, I just transform the 2D output in an equivalent 3D one.
+
+    Args:
+        pl (M.mesh.PolyLine): input polyline
+        z (float, optional): extent of the extrusion. The ribbon will span [-z;z] in its third coordinate. Defaults to 1.
+
+    Returns:
+        np.ndarray, np.ndarray: Extruded surface as V,F where V is a numpy array of points of shape (2N,3) and F is a (M,3) numpy array of face indices
+    """
+    nv = len(pl.vertices)
+    vert_pos, vert_neg = [],[]
+    for v in pl.vertices:
+        vert_pos.append(M.Vec(v[0], v[1], z))
+        vert_neg.append(M.Vec(v[0], v[1], -z))
+    vert_pos = np.array(vert_pos)
+    vert_neg = np.array(vert_neg)
+    faces = []
+    for (a,b) in pl.edges:
+        faces.append((a,b,nv+b,nv+a))
+    faces = np.array(faces)
+    return np.concatenate((vert_pos, vert_neg)), faces
 
 
 def estimate_normals(V, tree:KDTree, k=30):

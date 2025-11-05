@@ -17,16 +17,21 @@ class PointSampler:
         n_points: int,
         on_ratio: float = 0.01,
     ):
-        n_on = int(on_ratio*n_points)
-        pts_on = self._sample_geometry(n_on)
-        field_on = self.field_generator.compute_on(pts_on)
-        
-        n_other = n_points - n_on
-        pts_other = self.sampler.sample(n_other)
-        field_other = self.field_generator.compute(pts_other)
-        
-        self.points = np.concatenate((pts_on, pts_other))
-        self.field = np.concatenate((field_on, field_other))
+        on_ratio = max(on_ratio, 0.)
+        if on_ratio<1e-14:
+           self.points = self.sampler.sample(n_points)
+           self.field = self.field_generator.compute(self.points)
+        else: 
+            n_on = int(on_ratio*n_points)
+            pts_on = self._sample_geometry(n_on)
+            field_on = self.field_generator.compute_on(pts_on)
+            
+            n_other = n_points - n_on
+            pts_other = self.sampler.sample(n_other)
+            field_other = self.field_generator.compute(pts_other)
+            
+            self.points = np.concatenate((pts_on, pts_other))
+            self.field = np.concatenate((field_on, field_other))
         return self.points, self.field
     
 

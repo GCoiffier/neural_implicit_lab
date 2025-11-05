@@ -31,11 +31,15 @@ class _BaseDistance(FieldGenerator):
         self.square : bool = square
 
     def _apply_distance_modifier(self, d):
-        if not self.signed:
-            d = np.abs(d)
-        if self.square:
-            d = d**2
-        return d
+        match (self.square, self.signed):
+            case (True, True):
+                return np.sign(d)*(d**2)
+            case (True, False):
+                return d**2
+            case (False, True):
+                return d
+            case (False,False):
+                return np.abs(d)
     
     def compute_on(self, query: np.ndarray) -> np.ndarray:
         return np.zeros(query.shape[0])

@@ -1,0 +1,91 @@
+site_name: ImplicitLab
+
+theme:
+  name: material
+
+  features:
+    - navigation.instant
+    #- navigation.tabs
+    #- navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - toc.follow
+
+plugins:
+- search
+- autorefs
+# - awesome-pages
+- mkdocstrings:
+    default_handler: python
+    handlers:
+      python:
+        paths: [ImplicitLab/]
+        options:
+          show_root_toc_entry: false
+          show_root_heading: false
+          show_signature_annotations: false
+          show_signature: true
+          show_source: false
+          merge_init_into_class: true
+          docstring_style: "google"
+          docstring_section_style: table
+          inherited_members: true
+- mkdocs-nav-weight:
+    section_renamed: false
+    index_weight: -10
+    warning: true
+    reverse: false
+    headless_included: false
+
+
+markdown_extensions:
+  - codehilite
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - toc:
+      toc_depth: 3
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - "custom_css.css"
+
+repo_url: https://github.com/GCoiffier/ImplicitLab
+repo_name: GCoiffier/ImplicitLab
+
+
+nav:
+  - Home: "index.md"
+
+  - Tutorials: 
+    - "tutorial/installation.md"
+    - "tutorial/preparing_dataset.md"
+    - "tutorial/training_model.md"
+    - "tutorial/geometrical_queries.md"
+    - "tutorial/loading_saving.md"
+
+  - Dataset Module:
+    - "data_management/point_sampler.md"
+
+  - Training Module:
+    - "training/trainer.md"
+    - "training/callbacks.md"
+    - "training/loss_functions.md"
+    - "training/architectures.md"
+
+  - Query Module:
+    - "queries/queries.md"
