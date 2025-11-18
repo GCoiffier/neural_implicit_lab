@@ -8,7 +8,7 @@ class NeuralPullTrainer(Trainer):
         super().__init__(config)
 
     def get_optimizer(self, model):
-        return torch.optim.Adam(model.parameters(), lr=1e-4)
+        return torch.optim.Adam(model.parameters(), lr=1e-3)
         
     def forward_test_batch(self, data, model):
         # same as train

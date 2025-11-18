@@ -15,10 +15,10 @@ data_2D = [
 def test_sampling_signed_distance(name, geometry_object):
     os.makedirs("tests/output", exist_ok=True)
     try:
-        sampling_strategy = implicitlab.sampling_strategy.UniformBox(geometry_object)
-        field_generator = implicitlab.fields.Distance(geometry_object, signed=True, square=False)
-        sampler = implicitlab.PointSampler(geometry_object, sampling_strategy, field_generator)
-    except implicitlab.data.fields.base.UnsupportedGeometryFormat as e:
+        sampling_strategy = IL.sampling_strategy.UniformBox(geometry_object)
+        field_generator = IL.fields.Distance(geometry_object, signed=True, square=False)
+        sampler = IL.PointSampler(geometry_object, sampling_strategy, field_generator)
+    except IL.data.fields.base.UnsupportedGeometryFormat as e:
         assert True
         return
     pts, sdf = sampler.sample(10_000)
@@ -32,10 +32,10 @@ def test_sampling_signed_distance(name, geometry_object):
 def test_sampling_occupancy(name, geometry_object):
     os.makedirs("tests/output", exist_ok=True)
     try:
-        sampling_strategy = implicitlab.sampling_strategy.UniformBox(geometry_object)
-        field_generator = implicitlab.fields.Occupancy(geometry_object, v_in=-1, v_out=1., v_on=0.)
-        sampler = implicitlab.PointSampler(geometry_object, sampling_strategy, field_generator)
-    except implicitlab.data.fields.base.UnsupportedGeometryFormat as e:
+        sampling_strategy = IL.sampling_strategy.UniformBox(geometry_object)
+        field_generator = IL.fields.Occupancy(geometry_object, v_in=-1, v_out=1., v_on=0.)
+        sampler = IL.PointSampler(geometry_object, sampling_strategy, field_generator)
+    except IL.data.fields.base.UnsupportedGeometryFormat as e:
         assert True
         return
     pts, sdf = sampler.sample(10_000)

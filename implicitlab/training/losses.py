@@ -15,8 +15,14 @@ class LossHKR:
         """
         return  F.relu(self.margin - y) + (1./self.lbda) * torch.mean(-y)
     
-def vector_alignment_loss(y, target):
+def VectorAlignmentLoss(y, target):
     return (1-F.cosine_similarity(y, target, dim = 1)*2).mean()
+
+
+def EikonalLoss(X, Y):
+    batch_grad = torch.autograd.grad(Y, X, grad_outputs=torch.ones_like(Y), create_graph=True)[0]
+    batch_grad_norm = batch_grad.norm(dim=-1)
+    return F.mse_loss(batch_grad_norm, torch.ones_like(batch_grad_norm))
 
 
 class SALLoss:

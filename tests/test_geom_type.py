@@ -1,6 +1,6 @@
 import pytest
 from data.test_data import *
-from implicitlab.data import GeometryType
+from IL.data import GeometryType
 
 @pytest.mark.parametrize("geometry_object, geometry_type", [
     (dragon(), GeometryType.POLYLINE_2D),

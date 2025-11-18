@@ -1,4 +1,4 @@
-import implicitlab.utils as Imp
+import IL.utils as Imp
 import mouette as M
 import os
 import numpy as np

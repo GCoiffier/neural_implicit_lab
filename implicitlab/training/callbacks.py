@@ -47,6 +47,9 @@ class LoggerCB(Callback):
         self.logged.update({"time" :  trainer.metrics["epoch_time"]})
         self.logged.update({"train_loss" : trainer.metrics["train_loss"]})
         print(f"Train loss after epoch {trainer.metrics['epoch']} : {trainer.metrics['train_loss']}")
+        if trainer.test_data_loader is None:
+            # no test_data_loader means that callOnEndTest will not be called.
+            self._write_log()
 
     def callOnEndTest(self, trainer, model):
         self.logged.update({"test_loss" : trainer.metrics["test_loss"]})
@@ -106,11 +109,14 @@ class Render2DCB(Callback):
             )
 
 class MarchingCubeCB(Callback):
-    def __init__(self, save_folder, freq, domain, res=100, iso=0):
+    def __init__(self, save_folder, freq, domain: M.geometry.AABB = None, res=100, iso=0):
         super().__init__()
         self.save_folder = save_folder
         self.freq = freq
-        self.domain = domain
+        if domain is None:
+            self.domain = M.geometry.AABB([-1.2]*3, [1.2]*3)
+        else:
+            self.domain = domain
         self.res = res
         if isinstance(iso,float):
             self.iso = [iso]
@@ -130,8 +136,8 @@ class MarchingCubeCB(Callback):
                     trainer.config.TEST_BATCH_SIZE)
                 for (n,off),mesh in iso_surfaces.items():
                     M.mesh.save(mesh, os.path.join(self.save_folder, f"e{epoch:04d}_n{n:02d}_iso{round(1000*off)}.obj"))
-            except:
-                
+            except Exception as e:
+                print("[ERROR] Marching Cube Callback:", e)
                 pass
 
 class UpdateHkrRegulCB(Callback):

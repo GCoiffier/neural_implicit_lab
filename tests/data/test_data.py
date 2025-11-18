@@ -1,5 +1,5 @@
-import implicitlab
-from implicitlab import load_geometry
+import IL
+from IL import load_geometry
 import mouette as M
 
 ##### 2D #####
@@ -27,7 +27,7 @@ def axes():
 
 def sphere():
     sph = M.procedural.sphere_fibonacci(550)
-    return implicitlab.data.prepare_geometry(sph)
+    return IL.data.prepare_geometry(sph)
 
 def spot():
     return load_geometry("tests/data/spot.obj")

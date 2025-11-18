@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import TensorDataset
+from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 
 def make_tensor_dataset(data:list, device:str) -> TensorDataset:

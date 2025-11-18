@@ -3,10 +3,10 @@ import mouette as M
 import numpy as np
 import torch
 
-import implicitlab as IL
-from implicitlab.data import PointSampler
-from implicitlab.training import TrainingConfig, hKRTrainer
-from implicitlab.training import callbacks
+import IL as IL
+from IL.data import PointSampler
+from IL.training import TrainingConfig, hKRTrainer
+from IL.training import callbacks
 
 
 os.makedirs("output", exist_ok=True)

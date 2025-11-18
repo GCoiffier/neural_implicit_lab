@@ -6,31 +6,32 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "mouette"
-version = "1.2.7.1"
+name = "implicitlab"
+version = "0.1"
 authors = [
   { name="Guillaume Coiffier" },
 ]
-description = "Geometry Processing and mesh handling in python"
+description = ""
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-  "aenum",
-  "tqdm",
-  "numpy",
-  "scipy",
-  "osqp>=1.0.4",
-  "numba",
-  "stl-reader",
-  "pyminiply"
+"numpy",
+"scipy",
+"scikit-image",
+"mouette",
+"torch>=2.7.1",
+"libigl==2.6.1",
+"triangle",
+"tqdm",
+"deel-torchlip"
 ]
 
 
 [project.urls]
-"Homepage" = "https://github.com/GCoiffier/mouette"
-"Documentation" = "https://GCoiffier.github.io/mouette"
+"Homepage" = "google.com"
+"Documentation" = "google.com"

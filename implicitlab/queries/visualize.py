@@ -202,6 +202,7 @@ def reconstruct_surface_marching_cubes(model, domain, device, iso=0, res=100, ba
     L = [np.linspace(domain.mini[i], domain.maxi[i], res) for i in range(3)]
     pts = np.hstack((np.meshgrid(*L))).swapaxes(0,1).reshape(3,-1).T
     dist_values = forward_in_batches(model, pts, device, compute_grad=False, batch_size=batch_size)
+    print("Implicit values:", np.amin(dist_values), np.amax(dist_values))
     dist_values = dist_values.reshape((res,res,res))
 
     ### Call marching cubes
@@ -228,9 +229,14 @@ def reconstruct_surface_marching_cubes(model, domain, device, iso=0, res=100, ba
             pV = M.Vec(mesh.vertices[v])
             ix, iy, iz = int(pV.x), int(pV.y), int(pV.z)
             dx, dy, dz = pV.x%1, pV.y%1, pV.z%1
-            vx = (1-dx)*L[0][ix] + dx * L[0][ix+1]
-            vy = (1-dy)*L[1][iy] + dy * L[1][iy+1]
-            vz = (1-dz)*L[2][iz] + dz * L[2][iz+1]
+
+            ixn = ix+1 if ix<res-1 else res-1
+            iyn = iy+1 if iy<res-1 else res-1
+            izn = iz+1 if iz<res-1 else res-1
+
+            vx = (1-dx)*L[0][ix] + dx * L[0][ixn]
+            vy = (1-dy)*L[1][iy] + dy * L[1][iyn]
+            vz = (1-dz)*L[2][iz] + dz * L[2][izn]
             mesh.vertices[v] = M.Vec(vx,vy,vz)
         to_save[key] = mesh
     return to_save

@@ -90,7 +90,7 @@ class _Distance3D(_BaseDistance):
         self.F = np.asarray(mesh.faces, dtype=int)
 
     def compute(self, query : np.ndarray) -> np.ndarray:
-        distance = igl.signed_distance(query, self.V, self.F)
+        distance = igl.signed_distance(query, self.V, self.F)[0]
         return self._apply_distance_modifier(distance)
 
 

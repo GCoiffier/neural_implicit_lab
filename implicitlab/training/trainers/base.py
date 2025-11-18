@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 
 from tqdm import tqdm
-from ..loss import *
+from ..losses import *
 from ..callbacks import Callback
 
 import time

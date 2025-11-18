@@ -1,7 +1,7 @@
 import torch
 from torch.nn import functional as F
 from .base import Trainer
-from ..loss import LossHKR
+from ..losses import LossHKR
 
 class hKRTrainer(Trainer):
 

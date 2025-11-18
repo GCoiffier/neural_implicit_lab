@@ -3,10 +3,9 @@ import mouette as M
 import numpy as np
 import torch
 
-import implicitlab as IL
-from implicitlab.data import PointSampler
-from implicitlab.training import TrainingConfig, NeuralPullTrainer
-from implicitlab.training import callbacks
+import IL as IL
+from IL.training import TrainingConfig, NeuralPullTrainer
+from IL.training import callbacks
 
 
 os.makedirs("output", exist_ok=True)
@@ -19,14 +18,14 @@ DEVICE = IL.utils.get_device()
 
 sampler = IL.PointSampler(
     geometry, 
-    IL.sampling_strategy.NearGeometryGaussian(geometry, stdv=0.3), 
+    IL.sampling_strategy.NearGeometryGaussian(geometry, stdv=0.1), 
     IL.fields.Nearest(geometry)
 )
 
-points, val = sampler.sample(500_000, on_ratio=0)
+points, val = sampler.sample(200_000, on_ratio=0)
 train_data = IL.data.make_tensor_dataset((points, val), DEVICE)
-visu_vector_field = M.procedural.vector_field(points, val-points)
-M.mesh.save(visu_vector_field, "output/project.mesh")
+# visu_vector_field = M.procedural.vector_field(points, val-points)
+# M.mesh.save(visu_vector_field, "output/project.mesh")
 
 # test_pts, test_val = sampler.sample(10_000)
 # test_data = IL.data.make_tensor_dataset((test_pts, test_val), DEVICE)
@@ -34,7 +33,7 @@ M.mesh.save(visu_vector_field, "output/project.mesh")
 ###### Training 
 
 # setup model
-model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 6).to(DEVICE)
+model = IL.nn.MultiLayerPerceptron(geometry.dim, 256, 8).to(DEVICE)
 # model = IL.nn.SirenNet(geometry.dim, 128, 4).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
