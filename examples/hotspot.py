@@ -19,69 +19,74 @@ if geometry.dim == 3:
     points, normals = M.sampling.sample_surface(geometry, 300_000, return_normals=True)
 elif geometry.dim == 2:
     points, normals = IL.data.sample_points_and_normals2D(geometry, 100_000)
-train_data = IL.data.make_tensor_dataset((points, normals), DEVICE)
+train_data = IL.data.make_tensor_dataset([points, normals], DEVICE)
 
-pc = M.mesh.from_arrays(points)
-M.mesh.save(pc, "output/train_pts.geogram_ascii")
+M.mesh.save(M.procedural.vector_field(points, normals, length_mult=0.1), "output/train_pts.geogram_ascii")
+
 
 ###### Training 
 
 # Setup model
-model = IL.nn.SirenNet(geometry.dim, 256, 6).to(DEVICE)
+model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 5).to(DEVICE)
+# model = IL.nn.SirenNet(geometry.dim, 128, 5).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
-class ImplicitSurfaceTrainer(Trainer):
+class HotspotTrainer(Trainer):
 
     def __init__(self, 
-        config : TrainingConfig
+        config : TrainingConfig,
+        lmbd = 10.
     ):
         super().__init__(config)
-        self.rho = 100.
+        self.lmbd = lmbd
         self.weights = {
-            "eikonal" : 50.,
-            "on" : 7000.,
-            "out" : 600.,
-            "normals": 100.,
+            "on" : 10.,
+            "eikonal": 1.,
+            "normals": 0.1,
+            "heat": 1.
         }
-    
+
     def get_optimizer(self, model):
         return torch.optim.Adam(model.parameters(), lr=self.config.LEARNING_RATE)
     
     def forward_test_batch(self, data, model): pass
     
     def forward_train_batch(self, data, model):
-        pts, normals = data
+        pts,normals = data
         pts.requires_grad = True
         Y_on = model(pts)
         batch_loss = self.weights["on"] * torch.mean(torch.abs(Y_on))
 
-        pts_out = 3*torch.rand_like(pts)-1
+        pts_out = 2.1*torch.rand_like(pts)-1
         pts_out.requires_grad = True
         Y_out = model(pts_out)
-        batch_loss += self.weights["out"] * torch.mean(torch.exp(- self.rho * torch.abs(Y_out)))
 
-        grad = torch.autograd.grad(Y_on, pts, grad_outputs=torch.ones_like(Y_on), create_graph=True)[0]
-        batch_loss += self.weights["normals"]*torch.nn.functional.mse_loss(grad, normals)
-        
-        batch_loss += self.weights["eikonal"] * EikonalLoss(pts_out, Y_out)
+        batch_grad = torch.autograd.grad(Y_out, pts_out, grad_outputs=torch.ones_like(Y_out), create_graph=True)[0]
+        # batch_loss += self.weights["normals"]*torch.nn.functional.mse_loss(batch_grad, normals)
+
+        batch_grad_norm = batch_grad.norm(dim=-1)
+        batch_loss += self.weights["heat"] * torch.mean(torch.exp(-2*self.lmbd*torch.abs(Y_out))*(1 + batch_grad_norm**2))
+        batch_loss += self.weights["eikonal"] * torch.nn.functional.mse_loss(batch_grad_norm, torch.ones_like(batch_grad_norm))
         
         return batch_loss
 
-
-trainer = ImplicitSurfaceTrainer(TrainingConfig(
+config = TrainingConfig(
     BATCH_SIZE=100,
     TEST_BATCH_SIZE = 5000,
     N_EPOCHS=200,
-    LEARNING_RATE=5e-5,
+    LEARNING_RATE=1e-4,
     DEVICE=DEVICE
-))
-
-trainer.add_callbacks(
-    callbacks.LoggerCB("output/training_log.txt"),
-    callbacks.MarchingCubeCB("output", 10, res=300, iso=0.)
 )
 
+
+trainer = HotspotTrainer(config, lmbd=1.)
+
+trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
+if geometry.dim == 2:
+    trainer.add_callbacks(callbacks.Render2DCB("output", 10))
+elif geometry.dim == 3:
+    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 10, res=300, iso=0.))
 trainer.set_training_data(train_data)
 trainer.train(model)
 

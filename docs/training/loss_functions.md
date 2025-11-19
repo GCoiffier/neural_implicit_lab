@@ -1,5 +1,7 @@
 ---
 title: Loss Functions
-weight: 5
 ---
 
+:::implicitlab.training.losses
+    options:
+        heading_level: 2

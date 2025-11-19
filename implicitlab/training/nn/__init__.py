@@ -3,3 +3,5 @@ from .mlp import MultiLayerPerceptron, MultiLayerPerceptronSkips
 from .lipschitz import DenseLipNetwork
 from .sll import DenseSDP
 from .siren import SirenNet
+
+from . import encodings

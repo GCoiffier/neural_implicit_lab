@@ -22,6 +22,10 @@ nav.md-nav--secondary {
 	color: #222;
 }
 
+.doc-object {
+  padding-left: 10px;
+  padding-bottom: 50px;
+}
 
 /* Darker hlines */
 [data-md-color-scheme="default"] .md-typeset hr {

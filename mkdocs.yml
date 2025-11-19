@@ -25,6 +25,7 @@ plugins:
           show_root_heading: false
           show_signature_annotations: false
           show_signature: true
+          show_if_no_docstring: false
           show_source: false
           merge_init_into_class: true
           docstring_style: "google"
@@ -86,6 +87,7 @@ nav:
     - "training/callbacks.md"
     - "training/loss_functions.md"
     - "training/architectures.md"
+    - "training/encodings.md"
 
   - Query Module:
     - "queries/queries.md"
