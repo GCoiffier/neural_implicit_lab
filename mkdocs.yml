@@ -1,8 +1,9 @@
 site_name: ImplicitLab
 
-theme:
+theme: 
+  # name: readthedocs
   name: material
-
+  
   features:
     - navigation.instant
     #- navigation.tabs

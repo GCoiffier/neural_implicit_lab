@@ -1,6 +1,6 @@
 import torch
 from .mlp import MultiLayerPerceptron, MultiLayerPerceptronSkips
-from .lipschitz import DenseLipNetwork
+from .lipschitz import DenseLipBjorck
 from .sll import DenseSDP
 from .siren import SirenNet
 from .phase import PhaseNet
@@ -16,7 +16,7 @@ def load_model(path, device:str):
     data = torch.load(path, map_location=device)
     model_type = data.get("id","Spectral")
     if model_type == "Spectral":
-        model = DenseLipNetwork(*data["meta"])
+        model = DenseLipBjorck(*data["meta"])
     elif model_type == "SDP":
         model = DenseSDP(*data["meta"])
     elif model_type == "MLP":
@@ -44,11 +44,11 @@ def select_model(name, DIM, n_layers, n_hidden, **kwargs):
             return SirenNet(DIM, n_hidden, n_layers)
 
         case "ortho":
-            return DenseLipNetwork(
+            return DenseLipBjorck(
                 DIM, n_hidden, n_layers,
                 group_sort_size = kwargs.get("group_sort_size",0), 
-                niter_spectral = kwargs.get("niter_spectral", 3), 
-                niter_bjorck = kwargs.get("niter_bjorck", 15))
+                n_iter_spectral = kwargs.get("niter_spectral", 3), 
+                n_iter_bjorck = kwargs.get("niter_bjorck", 15))
 
         case "sll":
             return DenseSDP(DIM, n_hidden, n_layers)

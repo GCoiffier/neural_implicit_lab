@@ -1,18 +1,10 @@
-"""
-Code adapted from the original PHASE implementation
-
-https://github.com/drv-agwl/Implicit_Neural_Representation/tree/master
-"""
-
 import numpy as np
 import torch.nn as nn
 import torch
 from math import pi
 
 def doubleWellPotential(s):
-    """
-    double well potential function with zeros at -1 and 1
-    """
+    # double well potential function with zeros at -1 and 1
     return (s ** 2) - 2 * (s.abs()) + 1.
 
 class FourierLayer(nn.Module):
@@ -28,16 +20,33 @@ class FourierLayer(nn.Module):
 
 class PhaseNet(nn.Module):
     def __init__(
-            self,
-            dim_in, 
-            dim_hidden, 
-            n_layers,
-            FF:bool=True,
-            skip_in=(),
-            geometric_init=True,
-            radius_init=1,
-            beta=100
+        self,
+        dim_in, 
+        dim_hidden, 
+        n_layers,
+        FF:bool=True,
+        skip_in=(),
+        geometric_init=True,
+        radius_init=1,
+        beta=100
     ):
+        """
+        Code adapted from the original PHASE implementation
+
+        Args:
+            dim_in (_type_): _description_
+            dim_hidden (_type_): _description_
+            n_layers (_type_): _description_
+            FF (bool, optional): _description_. Defaults to True.
+            skip_in (tuple, optional): _description_. Defaults to ().
+            geometric_init (bool, optional): _description_. Defaults to True.
+            radius_init (int, optional): _description_. Defaults to 1.
+            beta (int, optional): _description_. Defaults to 100.
+        
+        References:
+            - _Phase Transitions, Distance Functions, and Implicit Neural Representations_, Yaron Lipman, 2021
+            - [https://github.com/drv-agwl/Implicit_Neural_Representation/tree/master](https://github.com/drv-agwl/Implicit_Neural_Representation/tree/master)
+        """
         super().__init__()
         self.FF = FF
         self.k = 6

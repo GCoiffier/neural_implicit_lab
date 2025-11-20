@@ -23,7 +23,7 @@ train_field = IL.fields.Occupancy(geometry, v_in=-1, v_out=1, v_on=-1)
 train_sampling_strat = IL.sampling_strategy.CombinedStrategy([
     IL.sampling_strategy.UniformBox(geometry),
     IL.sampling_strategy.NearGeometryGaussian(geometry)
-], [1., 1.])
+], [2., 1.])
 train_sampler = PointSampler(geometry, train_sampling_strat, train_field)
 points, val = train_sampler.sample(100_000)
 train_data = IL.data.make_tensor_dataset((points, val), DEVICE) 
@@ -38,7 +38,7 @@ test_data = IL.data.make_tensor_dataset((test_pts, test_val), DEVICE)
 
 
 ###### Training 
-model = IL.nn.DenseSDP(geometry.dim, 100, 10).to(DEVICE)
+model = IL.nn.DenseSDP(geometry.dim, 128, 8).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
@@ -49,12 +49,27 @@ config = TrainingConfig(
     DEVICE=DEVICE
 )
 
+class UpdateHkrRegulCB(callbacks.Callback):
+
+    def __init__(self, when : dict):
+        super().__init__()
+        self.when = when
+
+    def callOnBeginTrain(self, trainer, model):
+        epoch = trainer.metrics["epoch"]
+        if epoch in self.when:
+            trainer.config.loss_regul = self.when[epoch]
+            trainer.log("Updated loss regul weight to", self.when[epoch])
+
+
 trainer = hKRTrainer(config, 0.01, 100.)
 trainer.add_callbacks(
     callbacks.LoggerCB("output/training_log.txt"),
     callbacks.Render2DCB("output", 10),
-    callbacks.CheckpointCB("output", [x for x in range(config.N_EPOCHS) if x%50==0])
+    callbacks.CheckpointCB("output", [x for x in range(config.N_EPOCHS) if x%50==0]),
+    UpdateHkrRegulCB({10 : 10., 20 : 100.})
 )
+
 trainer.set_training_data(train_data)
 trainer.set_test_data(test_data)
 trainer.train(model)

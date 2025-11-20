@@ -2,8 +2,19 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-# On the Effectiveness of Weight-Encoded Neural Implicit 3D Shapes
-def MultiLayerPerceptron(dim_in, dim_hidden, n_layers, activ=nn.ReLU, final_activ=nn.Identity):
+def MultiLayerPerceptron(dim_in: int, dim_hidden: int, n_layers: int, activ=nn.ReLU, final_activ=nn.Identity):
+    """Simple Multi-layer Perceptron.
+
+    Args:
+        dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
+        dim_hidden (int): dimension of the hidden layers.
+        n_layers (int): number of hidden layers.
+        activ (torch.nn.Module, optional): Activation function of the network. Defaults to `torch.nn.ReLU`.
+        final_activ (torch.nn.Module, optional): Final activation of the network, to be applied to the output before returning the value. Defaults to `torch.nn.Identity`.
+    
+    References:
+        - _On the Effectiveness of Weight-Encoded Neural Implicit 3D Shapes_, Davies et al., 2021
+    """
     layers = []
     layers.append(nn.Linear(dim_in, dim_hidden))
     layers.append(activ())
@@ -23,7 +34,7 @@ def MultiLayerPerceptron(dim_in, dim_hidden, n_layers, activ=nn.ReLU, final_acti
 
 class MultiLayerPerceptronSkips(nn.Module):
 
-    def __init__(self, dim_in, dim_hidden, n_layers, skips=[]):
+    def __init__(self, dim_in: int, dim_hidden: int, n_layers: int, skips: list = []):
         super().__init__()
         self.skips = [x in skips for x in range(n_layers)]
         self.layers = nn.ModuleList([])

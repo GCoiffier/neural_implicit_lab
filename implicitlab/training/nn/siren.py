@@ -2,8 +2,6 @@ import torch
 from torch import nn
 import numpy as np
 
-# Code adapted from https://github.com/MClemot/SkeletonLearning/blob/main/siren_nn.py
-
 class SinusActivation(nn.Module):
     def __init__(self, w0 = 30.):
         super().__init__()
@@ -35,7 +33,21 @@ class SirenLayer(nn.Module):
         return self.activation(nn.functional.linear(x, self.weight, self.bias))
 
 
-def SirenNet(dim_in, dim_hidden, n_layers, w0:float = 6., w0_first_layer:float = 30.):
+def SirenNet(dim_in: int, dim_hidden: int, n_layers: int, w0: float = 6., w0_first_layer: float = 30.):
+    """
+    
+    Code adapted from [https://github.com/MClemot/SkeletonLearning/blob/main/siren_nn.py](https://github.com/MClemot/SkeletonLearning/blob/main/siren_nn.py)
+
+    Args:
+        dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
+        dim_hidden (int): dimension of the hidden layers.
+        n_layers (int): number of hidden layers.
+        w0 (float, optional): Frequency of the activation function. Defaults to 6..
+        w0_first_layer (float, optional): Frequency of the activation function in the first layer. Defaults to 30.
+    
+    References:
+        _Implicit Neural Representations with Periodic Activation Functions_, Sitzmann et al., 2020
+    """
     layers = []
     # First dim_in -> dim_hidden layer
     layers.append(SirenLayer(dim_in, dim_hidden, w0_first_layer, is_first_layer=True))

@@ -62,9 +62,10 @@ class HotspotTrainer(Trainer):
         pts_out.requires_grad = True
         Y_out = model(pts_out)
 
-        batch_grad = torch.autograd.grad(Y_out, pts_out, grad_outputs=torch.ones_like(Y_out), create_graph=True)[0]
-        # batch_loss += self.weights["normals"]*torch.nn.functional.mse_loss(batch_grad, normals)
+        batch_grad_on = torch.autograd.grad(Y_on, pts, grad_outputs=torch.ones_like(Y_out), create_graph=True)[0]
+        batch_loss += self.weights["normals"]*torch.nn.functional.mse_loss(batch_grad_on, normals)
 
+        batch_grad = torch.autograd.grad(Y_out, pts_out, grad_outputs=torch.ones_like(Y_out), create_graph=True)[0]
         batch_grad_norm = batch_grad.norm(dim=-1)
         batch_loss += self.weights["heat"] * torch.mean(torch.exp(-2*self.lmbd*torch.abs(Y_out))*(1 + batch_grad_norm**2))
         batch_loss += self.weights["eikonal"] * torch.nn.functional.mse_loss(batch_grad_norm, torch.ones_like(batch_grad_norm))

@@ -26,15 +26,12 @@ sampling_strat = IL.sampling_strategy.CombinedStrategy([
     IL.sampling_strategy.NearGeometryGaussian(geometry)
 ], [1., 9.])
 
-K = 1.
 
 sampler = IL.PointSampler(geometry, sampling_strat, field)
-points, val = sampler.sample(500_000)
-# val = np.clip(K*val, -1, 1)
+points, val = sampler.sample(100_000)
 train_data = IL.data.make_tensor_dataset((points, val), DEVICE)
 
 test_pts, test_val = sampler.sample(10_000)
-# test_val = np.clip(K*test_val, -1, 1)
 test_data = IL.data.make_tensor_dataset((test_pts, test_val), DEVICE)
 
 pc = M.mesh.from_arrays(points)
@@ -45,7 +42,7 @@ M.mesh.save(pc, "output/train_pts.geogram_ascii")
 
 # setup model
 # model = implicitlab.nn.MultiLayerPerceptron(geometry.dim, 128, 5).to(DEVICE)
-model = IL.nn.SirenNet(geometry.dim, 256, 6).to(DEVICE)
+model = IL.nn.SirenNet(geometry.dim, 128, 6).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
@@ -57,16 +54,13 @@ config = TrainingConfig(
     DEVICE=DEVICE
 )
 
-trainer = IL.training.SimpleRegressionTrainer(config, lossfun=torch.nn.MSELoss())
-# trainer = IL.training.RegressionEikonalTrainer(config, eikonal_weight=1e-3)
+# trainer = IL.training.SimpleRegressionTrainer(config, lossfun=torch.nn.MSELoss())
+trainer = IL.training.RegressionEikonalTrainer(config, eikonal_weight=1e-3)
 
-trainer.add_callbacks(
-    callbacks.LoggerCB("output/training_log.txt"),
-)
+trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"),)
 if geometry.dim == 2:
     trainer.add_callbacks(callbacks.Render2DCB("output", 10))
 elif geometry.dim == 3:
-    domain = M.geometry.AABB([-1.5]*geometry.dim, [1.5]*geometry.dim)
     trainer.add_callbacks(callbacks.MarchingCubeCB("output", 10, res=400))
 
 trainer.set_training_data(train_data)

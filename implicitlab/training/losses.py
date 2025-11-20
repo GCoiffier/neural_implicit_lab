@@ -46,7 +46,7 @@ class EikonalLoss:
     """
     The Eikonal loss regularizes the gradient of a neural implicit to have unit norm everywhere:
 
-    $$(||\\nabla f_\theta|| -1)^2$$
+    $$\mathcal{L}_{\\text{eik}}(x) = (||\\nabla f_\\theta(x)|| -1)^2$$
     
     The gradient is computed from the input $X$ and the output $Y$ of the neural model.
     """
@@ -121,7 +121,7 @@ class SALDLoss:
 
 class HotspotLoss:
     """
-    $$e^{-2 \lambda |f(x)| \left( || \\nabla f||^2 + 1 \\right)}$$
+    $$\mathcal{L}_{\\text{heat}}(f) = \mathbb{E}_x \left[ e^{-2 \lambda |f(x)|} \left( || \\nabla f||^2 + 1 \\right) \\right].$$
 
     References:
         - HotSpot: Signed Distance Function Optimization with an Asymptotically Sufficient Condition, Wang et al., 2025
@@ -138,32 +138,31 @@ class HotspotLoss:
 class SingularHessianLoss:
     """
     TODO
-
-    def singular_hessian_loss(mnfld_points, nonmnfld_points, mnfld_grad, nonmnfld_grad):
-        nonmnfld_dx = utils.gradient(nonmnfld_points, nonmnfld_grad[:, :, 0])
-        nonmnfld_dy = utils.gradient(nonmnfld_points, nonmnfld_grad[:, :, 1])
-        mnfld_dx = utils.gradient(mnfld_points, mnfld_grad[:, :, 0])
-        mnfld_dy = utils.gradient(mnfld_points, mnfld_grad[:, :, 1])
-
-        # if dims == 3:
-        nonmnfld_dz = utils.gradient(nonmnfld_points, nonmnfld_grad[:, :, 2])
-        nonmnfld_hessian_term = torch.stack((nonmnfld_dx, nonmnfld_dy, nonmnfld_dz), dim=-1)
-
-        mnfld_dz = utils.gradient(mnfld_points, mnfld_grad[:, :, 2])
-        mnfld_hessian_term = torch.stack((mnfld_dx, mnfld_dy, mnfld_dz), dim=-1)
-
-        nonmnfld_det = torch.det(nonmnfld_hessian_term)
-        mnfld_det = torch.det(mnfld_hessian_term)
-
-        morse_mnfld = torch.tensor([0.0], device=mnfld_points.device)
-        morse_nonmnfld = torch.tensor([0.0], device=mnfld_points.device)
-        # if div_type == 'l1':
-        morse_nonmnfld = nonmnfld_det.abs().mean()
-        morse_mnfld = mnfld_det.abs().mean()
-
-        morse_loss = 0.5 * (morse_nonmnfld + morse_mnfld)
-
-        return morse_loss
     """
+    pass
 
-    
+    # def singular_hessian_loss(mnfld_points, nonmnfld_points, mnfld_grad, nonmnfld_grad):
+    #     nonmnfld_dx = utils.gradient(nonmnfld_points, nonmnfld_grad[:, :, 0])
+    #     nonmnfld_dy = utils.gradient(nonmnfld_points, nonmnfld_grad[:, :, 1])
+    #     mnfld_dx = utils.gradient(mnfld_points, mnfld_grad[:, :, 0])
+    #     mnfld_dy = utils.gradient(mnfld_points, mnfld_grad[:, :, 1])
+
+    #     # if dims == 3:
+    #     nonmnfld_dz = utils.gradient(nonmnfld_points, nonmnfld_grad[:, :, 2])
+    #     nonmnfld_hessian_term = torch.stack((nonmnfld_dx, nonmnfld_dy, nonmnfld_dz), dim=-1)
+
+    #     mnfld_dz = utils.gradient(mnfld_points, mnfld_grad[:, :, 2])
+    #     mnfld_hessian_term = torch.stack((mnfld_dx, mnfld_dy, mnfld_dz), dim=-1)
+
+    #     nonmnfld_det = torch.det(nonmnfld_hessian_term)
+    #     mnfld_det = torch.det(mnfld_hessian_term)
+
+    #     morse_mnfld = torch.tensor([0.0], device=mnfld_points.device)
+    #     morse_nonmnfld = torch.tensor([0.0], device=mnfld_points.device)
+    #     # if div_type == 'l1':
+    #     morse_nonmnfld = nonmnfld_det.abs().mean()
+    #     morse_mnfld = mnfld_det.abs().mean()
+
+    #     morse_loss = 0.5 * (morse_nonmnfld + morse_mnfld)
+
+    #     return morse_loss    

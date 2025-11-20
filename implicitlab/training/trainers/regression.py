@@ -23,6 +23,7 @@ class RegressionEikonalTrainer(Trainer):
     def __init__(self, config, eikonal_weight:float = 0.01):
         super().__init__(config)
         self.eikonal_weight: float = eikonal_weight
+        self.eik_loss = EikonalLoss()
 
     def forward_test_batch(self, data, model):
         X,Y_target = data
@@ -37,7 +38,7 @@ class RegressionEikonalTrainer(Trainer):
         x_rdm = 2*torch.rand_like(X)-1 # between -1 and 1
         x_rdm.requires_grad = True
         y_rdm = model(x_rdm)
-        batch_loss_eik = self.eikonal_weight * EikonalLoss(x_rdm, y_rdm)
+        batch_loss_eik = self.eikonal_weight * self.eik_loss(x_rdm, y_rdm)
         
         return batch_loss_fit + batch_loss_eik
 

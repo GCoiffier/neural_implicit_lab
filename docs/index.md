@@ -1,8 +1,25 @@
-ImplicitLab
+---
+title: ImplicitLab
+---
 
 ## Overview
 
-blabla
+Implicitlab is a python library built on top of [pytorch](https://pytorch.org/) to ease the computation of _implicit neural surfaces_ (INR).
+
+<figure markdown>
+  ![](_img/representative_image_3d.jpeg){ width="800" }
+</figure>
+
+<figure markdown>
+  ![](_img/representative_image_2d.jpeg){ width="400" }
+</figure>
+
+
+#### Fatures
+- Loading, processing and sampling of various input geometry types (point clouds, polylines, surface meshes) to generate relevant training datasets  
+- Training of various neural models using various published algorithms  
+- Loading and saving implicit representations by serializing pytorch models  
+- Perform geometrical queries and geometry processing on INRs   
 
 ## License
 

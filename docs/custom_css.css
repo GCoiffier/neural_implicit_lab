@@ -27,6 +27,14 @@ nav.md-nav--secondary {
   padding-bottom: 50px;
 }
 
+.doc .doc-heading {
+  font-size: x-large;
+}
+
+.doc-contents {
+  margin-left: 10px;
+}
+
 /* Darker hlines */
 [data-md-color-scheme="default"] .md-typeset hr {
     border-bottom-color: rgb(0, 0, 0);

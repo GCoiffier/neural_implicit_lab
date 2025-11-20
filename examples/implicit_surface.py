@@ -27,7 +27,7 @@ M.mesh.save(pc, "output/train_pts.geogram_ascii")
 ###### Training 
 
 # Setup model
-model = IL.nn.SirenNet(geometry.dim, 256, 6).to(DEVICE)
+model = IL.nn.SirenNet(geometry.dim, 128, 6).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
@@ -64,7 +64,7 @@ class ImplicitSurfaceTrainer(Trainer):
         grad = torch.autograd.grad(Y_on, pts, grad_outputs=torch.ones_like(Y_on), create_graph=True)[0]
         batch_loss += self.weights["normals"]*torch.nn.functional.mse_loss(grad, normals)
         
-        batch_loss += self.weights["eikonal"] * EikonalLoss(pts_out, Y_out)
+        batch_loss += self.weights["eikonal"] * EikonalLoss()(pts_out, Y_out)
         
         return batch_loss
 
@@ -77,11 +77,11 @@ trainer = ImplicitSurfaceTrainer(TrainingConfig(
     DEVICE=DEVICE
 ))
 
-trainer.add_callbacks(
-    callbacks.LoggerCB("output/training_log.txt"),
-    callbacks.MarchingCubeCB("output", 10, res=300, iso=0.)
-)
-
+trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
+if geometry.dim == 2:
+    trainer.add_callbacks(callbacks.Render2DCB("output", 10))
+elif geometry.dim == 3:
+    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 10, res=300, iso=0.))
 trainer.set_training_data(train_data)
 trainer.train(model)
 
