@@ -15,7 +15,7 @@ class SirenLayer(nn.Module):
         dim_out:int, 
         w0 : float = 1., 
         c : float = 6., 
-        is_first_layer:bool = False, 
+        is_first_layer:bool = False,
         activation:bool=True
     ):
         super().__init__()

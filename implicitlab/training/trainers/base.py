@@ -82,11 +82,12 @@ class Trainer:
     def forward_train_batch(self, data, model):
         pass
 
-    def train(self, model):
+    def train(self, model, starting_epoch=0):
         if self.train_data_loader is None:
             raise Exception("No training data was provided. Call the `set_training_data` before training.")
         self.optimizer = self.get_optimizer(model)
         for epoch in range(self.config.N_EPOCHS):
+            epoch += starting_epoch
             self.metrics["epoch"] = epoch+1
             for cb in self.callbacks:
                 cb.callOnBeginTrain(self, model)

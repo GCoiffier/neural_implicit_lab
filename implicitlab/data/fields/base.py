@@ -14,7 +14,13 @@ class FieldGenerator(ABC):
 
     def compute_on(self, query: np.ndarray) -> np.ndarray:
         return self.compute(query)
-    
+
+#######################################################################################
+
+class EmptyFieldGenerator(FieldGenerator):
+    def compute(self, *args): return None
+    def compute_on(self, *args): return None
+
 #######################################################################################
 
 class UnsupportedGeometryFormat(Exception):

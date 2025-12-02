@@ -1,13 +1,13 @@
 import mouette as M
 from .sampling_strategy import *
-from .fields import FieldGenerator
+from .fields.base import FieldGenerator, EmptyFieldGenerator
 
 class PointSampler:
 
     def __init__(self, geom_object: M.mesh.Mesh, sampling_strategy: SamplingStrategy, field_generator : FieldGenerator = None):
         self.geom_object = geom_object
         self.sampler : SamplingStrategy = sampling_strategy
-        self.field_generator = field_generator
+        self.field_generator = field_generator if field_generator is not None else EmptyFieldGenerator()
         
         self.points : np.ndarray = None
         self.field : np.ndarray = None
@@ -17,10 +17,13 @@ class PointSampler:
         n_points: int,
         on_ratio: float = 0.01,
     ):
-        on_ratio = max(on_ratio, 0.)
+        on_ratio = min(max(on_ratio, 0.), 1.)
         if on_ratio<1e-14:
            self.points = self.sampler.sample(n_points)
            self.field = self.field_generator.compute(self.points)
+        elif on_ratio>1-1e-14:
+            self.points = self._sample_geometry(n_points)
+            self.field = self.field_generator.compute_on(self.points)
         else: 
             n_on = int(on_ratio*n_points)
             pts_on = self._sample_geometry(n_on)
@@ -32,6 +35,9 @@ class PointSampler:
             
             self.points = np.concatenate((pts_on, pts_other))
             self.field = np.concatenate((field_on, field_other))
+        
+        if self.field is None:
+            return self.points
         return self.points, self.field
     
 

@@ -1,7 +1,6 @@
 import torch
 from .mlp import MultiLayerPerceptron, MultiLayerPerceptronSkips
-from .lipschitz import DenseLipBjorck
-from .sll import DenseSDP
+from .lipschitz import DenseLipBjorck, DenseLipSDP
 from .siren import SirenNet
 from .phase import PhaseNet
 

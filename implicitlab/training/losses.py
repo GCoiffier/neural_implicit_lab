@@ -6,7 +6,7 @@ class HKRLoss:
         """
         Hinge Kantorovitch-Rubinstein loss
     
-        $$\\text{hKR}(x) = \lambda*\max(0, m-x) - \\frac{x}{\lambda}$$
+        $$\\text{hKR}(x) = \\lambda*\\max(0, m-x) - \\frac{x}{\\lambda}$$
 
         Args:
             margin (float, optional):  hinge margin. Must be small but not too small. Defaults to 1e-2.
@@ -46,7 +46,7 @@ class EikonalLoss:
     """
     The Eikonal loss regularizes the gradient of a neural implicit to have unit norm everywhere:
 
-    $$\mathcal{L}_{\\text{eik}}(x) = (||\\nabla f_\\theta(x)|| -1)^2$$
+    $$\\mathcal{L}_{\\text{eik}}(x) = (||\\nabla f_\\theta(x)|| -1)^2$$
     
     The gradient is computed from the input $X$ and the output $Y$ of the neural model.
     """
@@ -121,7 +121,7 @@ class SALDLoss:
 
 class HotspotLoss:
     """
-    $$\mathcal{L}_{\\text{heat}}(f) = \mathbb{E}_x \left[ e^{-2 \lambda |f(x)|} \left( || \\nabla f||^2 + 1 \\right) \\right].$$
+    $$\\mathcal{L}_{\\text{heat}}(f) = \\mathbb{E}_x \\left[ e^{-2 \\lambda |f(x)|} \\left( || \\nabla f||^2 + 1 \\right) \\right].$$
 
     References:
         - HotSpot: Signed Distance Function Optimization with an Asymptotically Sufficient Condition, Wang et al., 2025

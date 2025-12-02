@@ -1,12 +1,14 @@
 import os, sys
 import mouette as M
 import numpy as np
-import torch
 
-import IL as IL
-from IL.data import PointSampler
-from IL.training import TrainingConfig, hKRTrainer
-from IL.training import callbacks
+import torch
+from torch import nn
+from torch.nn import functional as F
+
+import implicitlab as IL
+from implicitlab.data import PointSampler
+from implicitlab.training import TrainingConfig, hKRTrainer, callbacks
 
 
 os.makedirs("output", exist_ok=True)
@@ -25,7 +27,20 @@ train_sampling_strat = IL.sampling_strategy.CombinedStrategy([
     IL.sampling_strategy.NearGeometryGaussian(geometry)
 ], [2., 1.])
 train_sampler = PointSampler(geometry, train_sampling_strat, train_field)
-points, val = train_sampler.sample(100_000)
+points, val = train_sampler.sample(200_000 if geometry.dim==2 else 1_000_000)
+
+# Balance the dataset : as many inside points that there are outside points
+points_pos = points[val>0, :]
+points_neg = points[val<0, :]
+n_pos, n_neg = points_pos.shape[0], points_neg.shape[0]
+print(n_pos, "outside points")
+print(n_neg, "inside points")
+if n_pos<n_neg:
+    points_neg = points_neg[:n_pos, :]
+elif n_pos>n_neg:
+    points_pos = points_pos[:n_neg, :]
+points = np.concatenate((points_pos, points_neg))
+val = np.concatenate((np.ones(min(n_pos,n_neg)), -np.ones(min(n_pos,n_neg))))
 train_data = IL.data.make_tensor_dataset((points, val), DEVICE) 
 
 
@@ -37,20 +52,21 @@ test_pts, test_val = test_sampler.sample(10_000)
 test_data = IL.data.make_tensor_dataset((test_pts, test_val), DEVICE)
 
 
-###### Training 
-model = IL.nn.DenseSDP(geometry.dim, 128, 8).to(DEVICE)
+###### Training
+# model = IL.nn.DenseLipBjorck(geometry.dim, 128, 20).to(DEVICE)
+# model = IL.nn.DenseLipAOL(geometry.dim, 128, 10).to(DEVICE)
+model = IL.nn.DenseLipSDP(geometry.dim, 128, 20).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
 config = TrainingConfig(
     BATCH_SIZE=200,
-    N_EPOCHS=200,
+    N_EPOCHS=300,
     LEARNING_RATE=1e-3,
     DEVICE=DEVICE
 )
 
 class UpdateHkrRegulCB(callbacks.Callback):
-
     def __init__(self, when : dict):
         super().__init__()
         self.when = when
@@ -58,19 +74,19 @@ class UpdateHkrRegulCB(callbacks.Callback):
     def callOnBeginTrain(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if epoch in self.when:
-            trainer.config.loss_regul = self.when[epoch]
-            trainer.log("Updated loss regul weight to", self.when[epoch])
+            trainer.lossfun.lmbd = self.when[epoch]
+            print("Updated loss regul weight to", self.when[epoch])
 
 
 trainer = hKRTrainer(config, 0.01, 100.)
 trainer.add_callbacks(
     callbacks.LoggerCB("output/training_log.txt"),
     callbacks.Render2DCB("output", 10),
-    callbacks.CheckpointCB("output", [x for x in range(config.N_EPOCHS) if x%50==0]),
-    UpdateHkrRegulCB({10 : 10., 20 : 100.})
+    # callbacks.CheckpointCB("output", [x for x in range(config.N_EPOCHS) if x%50==0]),
+    UpdateHkrRegulCB({1: 1., 5 : 10., 10 : 100.})
 )
 
 trainer.set_training_data(train_data)
 trainer.set_test_data(test_data)
 trainer.train(model)
-IL.nn.save_model(model, "output/model.pt")
+# IL.nn.save_model(model, "output/model.pt")

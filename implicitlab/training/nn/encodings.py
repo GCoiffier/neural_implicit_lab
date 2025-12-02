@@ -11,7 +11,7 @@ class RandomFourierEncoding(nn.Module):
     def __init__(self, geometry : M.mesh.Mesh, dim_encoded: int, stdv: float = 1.):
         """Encodes a given position into different frequencies of trigonometric functions :
 
-        $$x \mapsto [\cos(2\pi b x), \sin(2 \pi b x)]$$
+        $$x \\mapsto [\cos(2\pi b x), \sin(2 \pi b x)]$$
 
         where $b$ is sampled from a normal distribution of zero mean (and provided standard deviation)
 
@@ -43,7 +43,7 @@ class HalfPlaneEncoding(nn.Module):
     def __init__(self, geometry, n_points: int):
         """Encoding that considers points with normals sampled on the geometry and applies the signed distance to each corresponding hyperplanes:
 
-        $$x \mapsto \langle n, x-p \\rangle$$
+        $$x \\mapsto \langle n, x-p \\rangle$$
 
         where $(p,n)$ are points and normals.
 
@@ -74,7 +74,7 @@ class PointDistanceEncoding(nn.Module):
     def __init__(self, geometry, n_points: int, sample_on_surface:bool = True):
         """Encodes the input point x with its l2 distance to sampled points $p$ in space:
 
-        $$x \mapsto ||x-p||_2$$
+        $$x \\mapsto ||x-p||_2$$
 
         Args:
             geometry (mouette.Mesh): the input geometry.
@@ -104,7 +104,7 @@ class GaussianEncoding(PointDistanceEncoding):
     def __init__(self, geometry, n_points: int, sample_on_surface:bool = True, stdv=1.):
         """ Variant of the PointDistanceEncoding where distance are then fed into a Gaussian kernel:
 
-        $$x \mapsto e^{ - \\frac{||x-p||^2}{\sigma}}$$
+        $$x \\mapsto e^{ - \\frac{||x-p||^2}{\sigma}}$$
 
         Args:
             geometry (mouette.Mesh): the input geometry.
