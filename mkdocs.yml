@@ -66,8 +66,8 @@ extra_javascript:
 extra_css:
   - "custom_css.css"
 
-repo_url: https://github.com/GCoiffier/ImplicitLab
-repo_name: GCoiffier/ImplicitLab
+repo_url: https://github.com/GCoiffier/neural_implicit_lab
+repo_name: GCoiffier/neural_implicit_lab
 
 
 nav:

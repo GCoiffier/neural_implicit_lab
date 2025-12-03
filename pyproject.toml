@@ -33,5 +33,5 @@ dependencies = [
 
 
 [project.urls]
-"Homepage" = "google.com"
-"Documentation" = "google.com"
+"Homepage" = "https://github.com/GCoiffier/neural_implicit_lab"
+"Documentation" = "https://github.com/GCoiffier/neural_implicit_lab"

@@ -1,6 +1,8 @@
 
 The _neural implicit lab_ is a helper library built on top of pytorch for training nimplicit neural representations (INR) of geometrical objects. The goal of the library is to make the computation of an INR the ressemble a config file as much as possible and abstract away the data sampling, the training loop and the model definition, while remaining highly customizable.
 
+**The library is under construction**. Expect heavy changes.
+
 ## Conventions
 
 - All input geometries are centered around zero and scaled down so that they fit inside `[-1, 1]^n`
