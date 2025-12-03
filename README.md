@@ -3,6 +3,7 @@ The _neural implicit lab_ is a helper library built on top of pytorch for traini
 
 **The library is under construction**. Expect heavy changes.
 
+
 ## Conventions
 
 - All input geometries are centered around zero and scaled down so that they fit inside `[-1, 1]^n`
