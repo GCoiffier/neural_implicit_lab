@@ -5,4 +5,6 @@ from .data import sampling_strategy
 
 from .training import nn
 
+from .queries import queries, visualize
+
 from . import utils

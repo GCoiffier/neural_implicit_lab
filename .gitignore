@@ -201,5 +201,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-.code-workspace
+*.code-workspace
 output/
