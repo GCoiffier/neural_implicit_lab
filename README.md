@@ -13,8 +13,8 @@ The documentation can be found here: [https://GCoiffier.github.io/neural_implici
 
 
 ## TODO list
-[] Rely on `meshio` for faster geometry loading
-[] Implement SAL and SALD
-[] Setup the query module
-[] Serialization of neural models
-[] Find a better name for the lib :)
+- Rely on `meshio` for faster geometry loading
+- Implement SAL and SALD
+- Setup the query module
+- Serialization of neural models
+- Find a better name for the lib :)  
