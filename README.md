@@ -4,7 +4,7 @@ The _neural implicit lab_ is a helper library built on top of pytorch for traini
 > **The library is under construction**.
 Expect heavy changes.
 
-The documentation can be found here: [https://GCoiffier.github.io/neural_implicit_lab/]https://GCoiffier.github.io/neural_implicit_lab/()
+The documentation can be found here: [https://GCoiffier.github.io/neural_implicit_lab/](https://GCoiffier.github.io/neural_implicit_lab/)
 
 ## Conventions
 
