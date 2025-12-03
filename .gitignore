@@ -202,4 +202,5 @@ cython_debug/
 .cursorindexingignore
 
 *.code-workspace
+ neural_implicit_lab.code-workspace
 output/
