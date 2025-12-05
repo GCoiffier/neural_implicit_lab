@@ -82,6 +82,12 @@ class Gaussian(SamplingStrategy):
 
 class NearGeometryGaussian(SamplingStrategy):
     def __init__(self, geom_object: M.mesh.Mesh, stdv:float=1e-2):
+        """_summary_
+
+        Args:
+            geom_object (M.mesh.Mesh): _description_
+            stdv (float, optional): _description_. Defaults to 1e-2.
+        """
         super().__init__()
         self.geom_object = geom_object
         self.stdv = stdv
@@ -104,17 +110,18 @@ class NearGeometryGaussian(SamplingStrategy):
 
 #######################################################################################
 
-class Density(SamplingStrategy):
+# TODO: sample according to a probability distribution function using Metropolis-Hastings algorithms
+# class Density(SamplingStrategy):
     
-    def __init__(self, density_fun):
-        """_summary_
+#     def __init__(self, density_fun):
+#         """_summary_
 
-        Args:
-            density_fun (Callable): _description_
-        """
-        super().__init__()
-        self.density = density_fun
+#         Args:
+#             density_fun (Callable): _description_
+#         """
+#         super().__init__()
+#         self.density = density_fun
 
 
-    def sample(self, n_pts: int):
-        return np.zeros(n_pts)
+#     def sample(self, n_pts: int):
+#         return np.zeros(n_pts)

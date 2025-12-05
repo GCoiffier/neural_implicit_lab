@@ -1,5 +1,5 @@
 ---
-title: Positional Encodings
+title: Input Encodings
 ---
 
 Encodings are a fixed transformation applied to the input before being fed into a neural network

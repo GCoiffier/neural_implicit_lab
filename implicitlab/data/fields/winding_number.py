@@ -10,6 +10,21 @@ from .utils import pseudo_surface_from_polyline, estimate_normals, estimate_vert
 #######################################################################################
 
 def WindingNumber(geom : M.mesh.Mesh):
+    """_summary_
+
+    Args:
+        geom (M.mesh.Mesh): _description_
+
+    Raises:
+        UnsupportedGeometryFormat: _description_
+
+    Returns:
+        _type_: _description_
+
+    References:
+        - [Fast winding numbers for soups and clouds](https://dl.acm.org/doi/10.1145/3197517.3201337), Barill et al., 2018  
+        - [https://libigl.github.io/libigl-python-bindings/igl_docs/#fast_winding_number_for_points](https://libigl.github.io/libigl-python-bindings/igl_docs/#fast_winding_number_for_points)  
+    """
     match geom.geom_type:
         case GeometryType.SURFACE_MESH_3D:
             return _WindingNumber3D_TriangleSoup(geom)

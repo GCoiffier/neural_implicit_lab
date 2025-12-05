@@ -8,6 +8,16 @@ from .utils import pseudo_surface_from_polyline
 from ..geometry import GeometryType
 
 def Distance(geom: M.mesh.Mesh, signed: bool = True, square: bool = False):
+    """_summary_
+
+    Args:
+        geom (M.mesh.Mesh): _description_
+        signed (bool, optional): _description_. Defaults to True.
+        square (bool, optional): _description_. Defaults to False.
+
+    Raises:
+        UnsupportedGeometryFormat: _description_
+    """
     match geom.geom_type:
         case GeometryType.POLYLINE_2D:
             return _Distance2D(geom, signed, square)

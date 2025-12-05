@@ -11,6 +11,17 @@ from .utils import extrude_2D_polyline
 #######################################################################################
 
 def Nearest(geom : M.mesh.Mesh):
+    """_summary_
+
+    Args:
+        geom (M.mesh.Mesh): _description_
+
+    Raises:
+        UnsupportedGeometryFormat: _description_
+
+    Returns:
+        _type_: _description_
+    """
     match geom.geom_type:
         case GeometryType.SURFACE_MESH_3D:
             return _Nearest3D_TriangleSoup(geom)

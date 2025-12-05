@@ -6,7 +6,12 @@ from .base import FieldGenerator
 
 class Constant(FieldGenerator):
     
-    def __init__(self, value):
+    def __init__(self, value:float):
+        """_summary_
+
+        Args:
+            value (float): _description_
+        """
         super().__init__()
         self.val = value
 
@@ -17,6 +22,12 @@ class Constant(FieldGenerator):
 class CustomFunction(FieldGenerator):
     
     def __init__(self, fun, fun_on = None):
+        """_summary_
+
+        Args:
+            fun (Callable): _description_
+            fun_on (Callable, optional): _description_. Defaults to None.
+        """
         super().__init__()
         self.fun = np.vectorize(fun, signature="(n)->()")
         self.fun_on = None

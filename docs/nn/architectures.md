@@ -1,5 +1,5 @@
 ---
-title: Neural Network Architectures
+title: Architectures
 ---
 
 ## Regular Architectures
@@ -23,3 +23,8 @@ title: Neural Network Architectures
         heading_level: 3
 
 
+## Utilities
+
+:::implicitlab.training.nn.utils
+    options:
+        heading_level: 3

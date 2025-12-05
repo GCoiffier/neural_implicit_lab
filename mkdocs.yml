@@ -78,17 +78,21 @@ nav:
     - "tutorial/preparing_dataset.md"
     - "tutorial/training_model.md"
     - "tutorial/geometrical_queries.md"
-    - "tutorial/loading_saving.md"
 
   - Dataset Module:
-    - "data_management/point_sampler.md"
+    - "data_management/geometry.md"
+    - "data_management/point_sampling.md"
+    - "data_management/field_computations.md"
+
+  - Neural Architectures:
+    - "nn/architectures.md"
+    - "nn/encodings.md"
+    - "nn/loading_saving_models.md"
 
   - Training Module:
     - "training/trainer.md"
     - "training/callbacks.md"
     - "training/loss_functions.md"
-    - "training/architectures.md"
-    - "training/encodings.md"
-
+  
   - Query Module:
     - "queries/queries.md"

@@ -5,6 +5,13 @@ from .fields.base import FieldGenerator, EmptyFieldGenerator
 class PointSampler:
 
     def __init__(self, geom_object: M.mesh.Mesh, sampling_strategy: SamplingStrategy, field_generator : FieldGenerator = None):
+        """_summary_
+
+        Args:
+            geom_object (M.mesh.Mesh): _description_
+            sampling_strategy (SamplingStrategy): _description_
+            field_generator (FieldGenerator, optional): _description_. Defaults to None.
+        """
         self.geom_object = geom_object
         self.sampler : SamplingStrategy = sampling_strategy
         self.field_generator = field_generator if field_generator is not None else EmptyFieldGenerator()
@@ -17,6 +24,15 @@ class PointSampler:
         n_points: int,
         on_ratio: float = 0.01,
     ):
+        """_summary_
+
+        Args:
+            n_points (int): _description_
+            on_ratio (float, optional): _description_. Defaults to 0.01.
+
+        Returns:
+            _type_: _description_
+        """
         on_ratio = min(max(on_ratio, 0.), 1.)
         if on_ratio<1e-14:
            self.points = self.sampler.sample(n_points)

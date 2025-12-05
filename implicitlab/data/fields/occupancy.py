@@ -7,6 +7,20 @@ from .utils import pseudo_surface_from_polyline
 from ..geometry import GeometryType
 
 def Occupancy(geom : M.mesh.Mesh, v_in:float, v_out:float, v_on:float):
+    """_summary_
+
+    Args:
+        geom (M.mesh.Mesh): _description_
+        v_in (float): _description_
+        v_out (float): _description_
+        v_on (float): _description_
+
+    Raises:
+        UnsupportedGeometryFormat: _description_
+
+    Returns:
+        _type_: _description_
+    """
     match geom.geom_type:
         # case GeometryType.POINT_CLOUD_2D:
         #     return

@@ -1,59 +1,26 @@
 import torch
-from .mlp import MultiLayerPerceptron, MultiLayerPerceptronSkips
-from .lipschitz import DenseLipBjorck, DenseLipSDP
-from .siren import SirenNet
-from .phase import PhaseNet
 
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+def save_model(model: torch.nn.Module, path: str):
+    """Saves a neural model onto the disk.
 
-def save_model(model, path):
-    data = { "id": model.id, "meta" : model.meta, "state_dict" : model.state_dict()}
+    Args:
+        model (torch.nn.Module): neural model to be saved
+        path (str): file path to the saved file.
+    """
+    data = { "model": model, "state_dict" : model.state_dict()}
     torch.save(data, path)
     
-def load_model(path, device:str):
-    data = torch.load(path, map_location=device)
-    model_type = data.get("id","Spectral")
-    if model_type == "Spectral":
-        model = DenseLipBjorck(*data["meta"])
-    elif model_type == "SDP":
-        model = DenseSDP(*data["meta"])
-    elif model_type == "MLP":
-        model = MultiLayerPerceptron(*data["meta"])
-    elif model_type == "SIREN":
-        model = SirenNet(*data["meta"])
-    elif model_type == "MLPS":
-        model = MultiLayerPerceptronSkips(*data["meta"])
-    elif model_type == "PHASE":
-        model = PhaseNet(*data["meta"])
-    else:
-        raise Exception(f"Model type {model_type} not recognized")
+def load_model(path:str, device:str = "cpu") -> torch.nn.Module:
+    """Loads a neural model from the disk
+
+    Args:
+        path (str): file path to the saved file
+        device (str, optional): device onto which the model is loaded. Defaults to "cpu".
+
+    Returns:
+        torch.nn.Module: the loaded neural model
+    """
+    data = torch.load(path, map_location=device, weights_only=False)
+    model = data["model"]
     model.load_state_dict(data["state_dict"])
     return model.to(device)
-
-def select_model(name, DIM, n_layers, n_hidden, **kwargs):
-    match name.lower():
-        case "mlp":
-            final_activ = kwargs.get("final_activ", torch.nn.Identity)
-            return MultiLayerPerceptron(
-                DIM, n_hidden, n_layers, 
-                final_activ=final_activ)
-        
-        case "siren":
-            return SirenNet(DIM, n_hidden, n_layers)
-
-        case "ortho":
-            return DenseLipBjorck(
-                DIM, n_hidden, n_layers,
-                group_sort_size = kwargs.get("group_sort_size",0), 
-                n_iter_spectral = kwargs.get("niter_spectral", 3), 
-                n_iter_bjorck = kwargs.get("niter_bjorck", 15))
-
-        case "sll":
-            return DenseSDP(DIM, n_hidden, n_layers)
-
-        case "phase":
-            return PhaseNet(DIM, n_hidden, n_layers, FF=kwargs.get("FF", False), skip_in=(4,))
-
-        case _:
-            raise Exception(f"model name {name} not recognized")

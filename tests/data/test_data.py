@@ -1,5 +1,5 @@
-import IL
-from IL import load_geometry
+import implicitlab as IL
+from implicitlab.data import load_geometry
 import mouette as M
 
 ##### 2D #####
