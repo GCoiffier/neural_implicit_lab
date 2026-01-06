@@ -4,36 +4,7 @@ import torch
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from skimage.measure import marching_cubes
-
 from ..utils import forward_in_batches
-
-def point_cloud_from_array(X, D=None):
-    pc = M.mesh.from_arrays(X)
-    if D is not None:
-        pc.vertices.register_array_as_attribute("dist",D)
-    return pc
-
-def point_cloud_from_arrays(*args) -> M.mesh.PointCloud:
-    clouds, labels = [], []
-    for pts,label in args:
-        clouds.append(point_cloud_from_array(pts))
-        labels.append(np.full(pts.shape[0], fill_value=label))
-    pc = M.mesh.merge(clouds)
-    pc.vertices.register_array_as_attribute("label", np.concatenate(labels))
-    return pc
-
-def vector_field_from_array(pos, vec, scale=1.) -> M.mesh.PolyLine:
-    pl = M.mesh.RawMeshData()
-    if pos.shape[1]==2:
-        pos = np.pad(pos, ((0,0),(0,1)))
-        vec = np.pad(vec, ((0,0),(0,1)))
-    n_pt = pos.shape[0]
-    for i in range(n_pt):
-        P1 = pos[i]
-        P2 = pos[i] + scale * vec[i]
-        pl.vertices += [P1, P2]
-        pl.edges.append((2*i,2*i+1))
-    return M.mesh.PolyLine(pl)
 
 
 def render_sdf_2d(render_path, contour_path, gradient_path, model, domain : M.geometry.AABB, device, res=1000, batch_size=1000):
@@ -181,19 +152,31 @@ def render_sdf_quad(render_path, contour_path, gradient_path, model, P0, P1, P2,
         plt.savefig(gradient_path, bbox_inches='tight', pad_inches=0)
 
 
-def parameter_singular_values(model):
-    layers = list(model.children())
-    data= []
-    for layer in layers:
-        if hasattr(layer, "weight"):
-            w = layer.weight
-            u, s, v = torch.linalg.svd(w)
-            # data.append(f"{layer}, {s}")
-            data.append(f"{layer}, min={s.min()}, max={s.max()}")
-    return data
+def reconstruct_surface_marching_cubes(
+    model : torch.nn.Module, 
+    domain : M.geometry.AABB, 
+    device : str, 
+    iso : int = 0, 
+    res : int = 100, 
+    batch_size : int =5000
+) -> dict:
+    """Extracts isosurfaces of a given neural implicit by using the Marching Cube algorithm.
 
+    Args:
+        model (torch.nn.Module): the neural implicit function.
+        domain (M.geometry.AABB): domain onto which the function values are computed.
+        device (str): device onto which the computation are performed.
+        iso (int, optional): value of the isosurface. Several values can be provided in a list. If that is the case, one mesh per isovalue will be produced. Defaults to 0.
+        res (int, optional): resolution of the marching cubes grid. Defaults to 100.
+        batch_size (int, optional): batch size for forward computation. Defaults to 5000.
 
-def reconstruct_surface_marching_cubes(model, domain, device, iso=0, res=100, batch_size=5000):
+    Returns:
+        dict: returns a dictionnary of ((i,iso), mesh) where i is a unique identifier, iso is the value of the isovalue and mesh is the output surface mesh (mouette.mesh.SurfaceMesh type).
+
+    References:
+        - Marching cubes: A high resolution 3D surface construction algorithm, Lorensen & Cline (1998)  
+        - https://scikit-image.org/docs/0.25.x/auto_examples/edges/plot_marching_cubes.html
+    """
     if isinstance(iso, (int,float)): iso = [iso]
     
     ### Feed grid to model

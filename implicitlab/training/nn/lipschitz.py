@@ -171,3 +171,16 @@ def DenseLipAOL(dim_in: int, dim_hidden: int, n_layers: int, coeff_lip:float = 1
     layers.append(torchlip.FrobeniusLinear(dim_hidden,1, k_coef_lip=coeff_lip))
     model = torch.nn.Sequential(*layers)
     return model
+
+
+
+def parameter_singular_values(model):
+    layers = list(model.children())
+    data= []
+    for layer in layers:
+        if hasattr(layer, "weight"):
+            w = layer.weight
+            u, s, v = torch.linalg.svd(w)
+            # data.append(f"{layer}, {s}")
+            data.append(f"{layer}, min={s.min()}, max={s.max()}")
+    return data
