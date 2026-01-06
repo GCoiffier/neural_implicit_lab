@@ -66,10 +66,8 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain : M.ge
     img = np.concatenate(dist_values).reshape((res,resY)).T
     img = img[::-1,:]
 
-    vmin = np.amin(img)
-    vmax = np.amax(img)
-    if vmin>0 or vmax<0:
-        vmin,vmax = -1, 1
+    vmin = min(np.amin(img), -1e-8)
+    vmax = max(np.amax(img), 1e-8)
 
     if render_path is not None:
         norm = colors.TwoSlopeNorm(vmin=vmin, vmax=vmax, vcenter=0)
@@ -97,7 +95,7 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain : M.ge
         print("GRAD NORM INTERVAL", (np.min(grad_img), np.max(grad_img)))
 
         plt.clf()
-        pos = plt.imshow(grad_img, vmin=0.5, vmax=1.5, cmap="bwr")
+        pos = plt.imshow(grad_img, vmin=0., vmax=2., cmap="bwr")
         plt.contour(img, levels=[0.], colors='k', linestyles="solid", linewidths=0.6)
         plt.axis("off")
         plt.colorbar(pos)

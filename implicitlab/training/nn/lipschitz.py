@@ -36,8 +36,6 @@ def DenseLipBjorck(
         layers.append(activation())
     layers.append(torchlip.FrobeniusLinear(dim_hidden, 1))
     model = torchlip.Sequential(*layers, k_coef_lip=k_coeff_lip)
-    model.meta = [dim_in, dim_hidden, n_layers]
-    model.id = "Spectral"
     return model
 
 
@@ -81,8 +79,9 @@ class SDPBasedLipschitzDenseLayer(nn.Module):
         res = 2 * F.linear(res, self.weight.T)
         out = x - res
         return out
-    
-def DenseLipSDP(dim_in: int, dim_hidden: int, n_layers: int, coeff_lip:float = 1.):
+
+
+def DenseLipSDP(dim_in: int, dim_hidden: int, n_layers: int, coeff_lip:float = 1., activation:nn.Module = nn.ReLU()):
     """
     Neural network made of _Semi-Definite Programming_ neural layers, as proposed by [1].
     Using a square matrix $W \\in \\mathbb{R}^{k \\times k}$, a bias vector $b \\in \\mathbb{R}^k$ and an additional vector $q \\in \\mathbb{R}^k$ as parameters, each layer is defined as:
@@ -100,6 +99,7 @@ def DenseLipSDP(dim_in: int, dim_hidden: int, n_layers: int, coeff_lip:float = 1
         dim_hidden (int): dimension of the hidden layers.
         n_layers (int): number of hidden layers.
         coeff_lip (float, optional): Lipschitz constant. Defaults to 1.
+        activation (nn.Module, optional): Activation function. This architecture is proven to be 1-Lipschitz for ReLU, sigmoid and tanh. Defaults to ReLU.
 
     References:
         [1] _A Unified Algebraic Perspective on Lipschitz Neural Networks_, Araujo et al., 2023
@@ -107,11 +107,9 @@ def DenseLipSDP(dim_in: int, dim_hidden: int, n_layers: int, coeff_lip:float = 1
     layers = []
     layers.append(nn.ZeroPad1d((0, dim_hidden-dim_in)))
     for _ in range(n_layers):
-        layers.append(SDPBasedLipschitzDenseLayer(dim_hidden, activation=nn.ReLU()))
+        layers.append(SDPBasedLipschitzDenseLayer(dim_hidden, activation=activation))
     layers.append(torchlip.FrobeniusLinear(dim_hidden,1, k_coef_lip=coeff_lip))
     model = torch.nn.Sequential(*layers)
-    model.id = "SDP"
-    model.meta = [dim_in, dim_hidden, n_layers]
     return model
 
 #######################################################################################################################################
@@ -172,6 +170,4 @@ def DenseLipAOL(dim_in: int, dim_hidden: int, n_layers: int, coeff_lip:float = 1
         layers.append(AOLLipschitzDenseLayer(dim_hidden, activation=activation))
     layers.append(torchlip.FrobeniusLinear(dim_hidden,1, k_coef_lip=coeff_lip))
     model = torch.nn.Sequential(*layers)
-    model.id = "AOL"
-    model.meta = [dim_in, dim_hidden, n_layers]
     return model

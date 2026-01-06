@@ -7,11 +7,17 @@ def save_model(model: torch.nn.Module, path: str):
         model (torch.nn.Module): neural model to be saved
         path (str): file path to the saved file.
     """
-    data = { "model": model, "state_dict" : model.state_dict()}
-    torch.save(data, path)
+    for tnsr in model.parameters(): break
+    try:
+        rdm_data = torch.rand((10,2)).to(tnsr.device)
+        traced_model = torch.jit.trace(model, rdm_data)
+    except:
+        rdm_data = torch.rand((10,3)).to(tnsr.device)
+        traced_model = torch.jit.trace(model, rdm_data)
+    traced_model.save(path)
     
 def load_model(path:str, device:str = "cpu") -> torch.nn.Module:
-    """Loads a neural model from the disk
+    """Loads a neural model from the disk.
 
     Args:
         path (str): file path to the saved file
@@ -20,7 +26,13 @@ def load_model(path:str, device:str = "cpu") -> torch.nn.Module:
     Returns:
         torch.nn.Module: the loaded neural model
     """
-    data = torch.load(path, map_location=device, weights_only=False)
-    model = data["model"]
-    model.load_state_dict(data["state_dict"])
-    return model.to(device)
+    model = torch.jit.load(path, map_location=device)
+    try:
+        rdm_data = torch.rand((10,2)).to(device)
+        _ = model(rdm_data)
+        model.dim = 2
+    except:
+        rdm_data = torch.rand((10,3)).to(device)
+        _ = model(rdm_data)
+        model.dim = 3
+    return model

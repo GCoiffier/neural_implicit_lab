@@ -1,12 +1,14 @@
 import torch
 import torch.nn.functional as F
 
+from ..utils import gradient
+
 class HKRLoss:
     def __init__(self, margin: float = 1e-2, lmbd: float = 10.):
         """
         Hinge Kantorovitch-Rubinstein loss
     
-        $$\\text{hKR}(x) = \\lambda*\\max(0, m-x) - \\frac{x}{\\lambda}$$
+        $$\\text{hKR}(x) = \\max(0, m-x) - \\frac{x}{\\lambda}$$
 
         Args:
             margin (float, optional):  hinge margin. Must be small but not too small. Defaults to 1e-2.
@@ -166,3 +168,52 @@ class SingularHessianLoss:
     #     morse_loss = 0.5 * (morse_nonmnfld + morse_mnfld)
 
     #     return morse_loss    
+
+
+
+class ThinPlateLoss:
+    """
+    
+    References:
+        - [NeuVAS: Neural Implicit Surfaces for Variational Shape Modeling](https://arxiv.org/abs/2506.13050), Wang et al., 2025
+        - [https://github.com/GeometryArt/NeuVAS/tree/main/code](https://github.com/GeometryArt/NeuVAS/tree/main/code)
+    """
+
+    def __call__(self, inp_tensor, out_tensor):
+        grad = gradient(inp_tensor, out_tensor)               
+        gdx  = gradient(inp_tensor, grad[:, 0])
+        gdy  = gradient(inp_tensor, grad[:, 1])
+        gdz  = gradient(inp_tensor, grad[:, 2])
+        hessian = torch.stack((gdx, gdy, gdz), dim=-1)
+        mc = self.mean_curvature(hessian, grad)
+        gc = self.gaussian_curvature(hessian, grad)
+        return torch.abs(4*mc*mc - 2*gc).sum()
+
+    
+    def mean_curvature(self, hess, grad):
+        grad = grad[:, None, :]
+        KM_term_1 = torch.bmm(grad, hess)
+        KM_term_1 = torch.bmm(KM_term_1, grad.permute(0, 2, 1)).squeeze(-1)
+
+        hess_diag = torch.diagonal(hess, dim1=-2, dim2=-1)
+        trace_hess = torch.sum(hess_diag, dim=-1)[:, None]
+    
+        grad_norm = grad.norm(dim=-1)
+        KM_term_2 = (grad_norm ** 2) * trace_hess
+
+        KM = (KM_term_1 - KM_term_2) / (2 * grad_norm ** 3 + 1e-12)
+        KM = torch.abs(KM)
+        return KM
+    
+
+    def gaussian_curvature(self, hess, grad):
+        grad = grad.unsqueeze(0)
+        nonmnfld_hessian_term = torch.cat((hess.unsqueeze(0), grad[:, :, :, None]), dim=-1)
+        zero_grad = torch.zeros(
+            (grad.shape[0], grad.shape[1], 1, 1),
+            device=grad.device)
+        zero_grad = torch.cat((grad[:, :, None, :], zero_grad), dim=-1)
+        nonmnfld_hessian_term = torch.cat((nonmnfld_hessian_term, zero_grad), dim=-2)
+        Kg = (-1. / (grad.norm(dim=-1) ** 4)) * torch.det(nonmnfld_hessian_term)
+        Kg = torch.abs(Kg.permute(1, 0))
+        return Kg

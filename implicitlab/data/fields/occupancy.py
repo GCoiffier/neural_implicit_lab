@@ -60,15 +60,15 @@ class _Occupancy2D(_BaseOccupancy):
 
 #######################################################################################
 
-class _Occupancy3D(FieldGenerator):
+class _Occupancy3D(_BaseOccupancy):
 
     def __init__(self, geom : M.mesh.PolyLine, v_in, v_out, v_on):
         super().__init__(v_in, v_out, v_on)
         self.geom_object = geom
     
     def compute(self, query : np.ndarray) -> np.ndarray:
-        wn = igl.fast_winding_number(np.asarray(self.geom.vertices), np.asarray(self.geom.faces, dtype=int), query)
-        occ = np.where(wn>=0, self.v_in, self.v_out)
+        wn = igl.fast_winding_number(np.asarray(self.geom_object.vertices), np.asarray(self.geom_object.faces, dtype=int), query)
+        occ = np.where(wn>=0.5, self.v_in, self.v_out)
         return occ
 
 #######################################################################################

@@ -5,7 +5,7 @@ from ..losses import HKRLoss
 
 class hKRTrainer(Trainer):
 
-    def __init__(self, config, margin, lmbd=0.1, test_mode="sdf"):
+    def __init__(self, config, margin, lmbd=10., test_mode="sdf"):
         super().__init__(config)
         self.lossfun = HKRLoss(margin, lmbd)
         if test_mode.lower()=="sdf":
@@ -20,10 +20,10 @@ class hKRTrainer(Trainer):
 
     def forward_train_batch(self, data, model):
         X,occ = data
+        X.requires_grad = True
         Y = model(X)
         return torch.sum(self.lossfun(occ*Y))
     
-
     def get_optimizer(self, model):
         return torch.optim.Adam(model.parameters(), lr=self.config.LEARNING_RATE) 
     

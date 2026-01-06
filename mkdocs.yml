@@ -96,3 +96,5 @@ nav:
   
   - Query Module:
     - "queries/queries.md"
+
+  - "utils.md"

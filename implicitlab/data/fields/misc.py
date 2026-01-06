@@ -16,7 +16,7 @@ class Constant(FieldGenerator):
         self.val = value
 
     def compute(self, query : np.ndarray) -> np.ndarray:
-        return np.full(query.shape[0], self.value)
+        return np.full(query.shape[0], self.val)
 
 
 class CustomFunction(FieldGenerator):

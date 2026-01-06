@@ -101,7 +101,6 @@ class Render2DCB(Callback):
         super().__init__()
         self.save_folder = save_folder
         os.makedirs(self.save_folder, exist_ok=True)
-        self.freq = freq
         if plot_domain is None:
             self.domain = M.geometry.AABB([-1.5,-1.5],[1.5,1.5])
         else:

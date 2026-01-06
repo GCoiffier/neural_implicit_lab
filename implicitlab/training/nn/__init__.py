@@ -1,4 +1,4 @@
-from .io import load_model, save_model, count_parameters
+from .io import load_model, save_model
 from .utils import *
 
 from .mlp import MultiLayerPerceptron, MultiLayerPerceptronSkips
