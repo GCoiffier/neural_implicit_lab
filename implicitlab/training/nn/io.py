@@ -27,12 +27,7 @@ def load_model(path:str, device:str = "cpu") -> torch.nn.Module:
         torch.nn.Module: the loaded neural model
     """
     model = torch.jit.load(path, map_location=device)
-    try:
-        rdm_data = torch.rand((10,2)).to(device)
-        _ = model(rdm_data)
-        model.dim = 2
-    except:
-        rdm_data = torch.rand((10,3)).to(device)
-        _ = model(rdm_data)
-        model.dim = 3
     return model
+
+
+    

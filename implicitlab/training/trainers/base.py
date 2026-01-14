@@ -4,6 +4,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 from ..losses import *
 from ..callbacks import Callback
+from ..optimizers.muon import SingleDeviceMuonWithAuxAdam
 
 import time
 from dataclasses import dataclass
@@ -18,6 +19,7 @@ class TrainingConfig:
     N_EPOCHS : int = 100
     LEARNING_RATE : float = 1e-3
     DEVICE : str = "cpu"
+    OPTIMIZER : str = "Adam"
 
 
 class Trainer:
@@ -53,8 +55,25 @@ class Trainer:
         self.test_data_loader = DataLoader(data, batch_size=self.config.TEST_BATCH_SIZE)
 
     def get_optimizer(self, model):
-        return torch.optim.SGD(model.parameters(), lr=self.config.LEARNING_RATE, momentum=0.9)
-    
+        match self.config.OPTIMIZER.lower():
+            case "sgd":
+                return torch.optim.SGD(model.parameters(), lr=self.config.LEARNING_RATE, momentum=0.9)
+            case "muon":
+                hidden_weights = [p for p in model.parameters() if p.ndim >= 2]
+                hidden_gains_biases = [p for p in model.parameters() if p.ndim < 2]
+                param_groups = [
+                    dict(params=hidden_weights, use_muon=True,
+                        lr=self.config.LEARNING_RATE, weight_decay=0.01),
+                    dict(params=hidden_gains_biases, use_muon=False,
+                        lr=5e-4, betas=(0.9, 0.95), weight_decay=0.01),
+                ]
+                return SingleDeviceMuonWithAuxAdam(param_groups)
+            case "adam":
+                return torch.optim.Adam(model.parameters(), lr=self.config.LEARNING_RATE) 
+            case _:
+                # Adam by default
+                return torch.optim.Adam(model.parameters(), lr=self.config.LEARNING_RATE) 
+            
     def add_callbacks(self, *args):
         if len(args)==1 and isinstance(args[0],Iterable): args = args[0]
         for cb in args:

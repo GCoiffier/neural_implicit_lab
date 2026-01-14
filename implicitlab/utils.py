@@ -15,7 +15,18 @@ def get_device(force_cpu:bool = False) -> torch.device:
         return torch.device("cpu")
     else:
         return torch.device("cuda")
-    
+
+
+def get_model_dim(model: torch.nn.Module, device):
+    try:
+        rdm_data = torch.rand((10,2)).to(device)
+        _ = model(rdm_data)
+        return 2
+    except:
+        rdm_data = torch.rand((10,3)).to(device)
+        _ = model(rdm_data)
+        return 3
+
 def forward_in_batches(
         model : torch.nn.Module, 
         inputs : np.ndarray, 

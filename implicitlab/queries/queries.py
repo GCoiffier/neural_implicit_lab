@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 from scipy.spatial import KDTree
 from tqdm import trange
-from ..utils import forward_in_batches
+from ..utils import forward_in_batches, get_model_dim
 
 def project_onto_iso(
     query_pts : np.ndarray, 
@@ -164,10 +164,13 @@ class _RayTracingImplicitSampler:
         self.threshold = thresh
         self.step_bound = 1.
         self.iso = iso
+        self._dim = None
     
     @property
     def dim(self) -> int:
-        return self.model.dim
+        if self._dim is None:
+            self._dim = get_model_dim(self.model, self.device)
+        return self._dim
     
     def sdf_fn(self, x):
         return self.model(x) - self.iso
@@ -281,7 +284,7 @@ class _RayTracingImplicitSampler:
         
         # sample random offsets in normal and binormal directions
         dirs = dirs[:,0,:] 
-        U = np.sqrt(self.dim) * ( np.random.uniform(0,1,(num_rays,1, self.dim-1)) * 2.2 - 1.1)  
+        U = np.sqrt(self.dim) * ( np.random.uniform(0,1,(num_rays,1, self.dim-1)) * 3. - 1.5)
         O = np.sum(U * E, axis=-1) 
         O = O + dirs * np.sqrt( self.dim)
         
@@ -327,7 +330,7 @@ class _RayTracingImplicitSampler:
             lines_dirs,
             max_t=torch.from_numpy(max_ts).to(torch.float32).to(self.device),
         ) 
-        return pts 
+        return pts.detach().cpu().numpy()
 
 def sample_iso_raytraced(
     model : torch.nn.Module,

@@ -7,11 +7,12 @@ from deel import torchlip
 #######################################################################################################################################
 
 def DenseLipBjorck(
-    dim_in:float,
-    dim_hidden:float,
-    n_layers:int,
-    group_sort_size:int=0, 
-    k_coeff_lip:float=1.
+    dim_in: float,
+    dim_hidden: float,
+    n_layers: int,
+    group_sort_size: int=0, 
+    bias: bool = True,
+    k_coeff_lip: float=1.
 ):
     """
     A Lipschitz neural architecture based on Björck's orthonormalization. The implementation is based on the `SpectralLinear` layer of the deel-torchlip library.
@@ -21,6 +22,7 @@ def DenseLipBjorck(
         dim_hidden (int): dimension of the hidden layers.
         n_layers (int): number of hidden layers.
         group_sort_size (int, optional): Size of the GroupSort activation function. If set to zero, the activation will be a FullSort. Defaults to 0.
+        bias (bool, optional): whether to include bias vectors in the layers. Defaults to True.
         k_coeff_lip (float, optional): Lipschitz constant of the network. Defaults to 1.
 
     References:
@@ -29,12 +31,12 @@ def DenseLipBjorck(
     """
     layers = []
     activation = torchlip.FullSort if group_sort_size == 0 else lambda : torchlip.GroupSort(group_sort_size)
-    layers.append(torchlip.SpectralLinear(dim_in, dim_hidden))
+    layers.append(torchlip.SpectralLinear(dim_in, dim_hidden, bias=bias))
     layers.append(activation())
     for _ in range(n_layers-1):
-        layers.append(torchlip.SpectralLinear(dim_hidden, dim_hidden))
+        layers.append(torchlip.SpectralLinear(dim_hidden, dim_hidden, bias=bias))
         layers.append(activation())
-    layers.append(torchlip.FrobeniusLinear(dim_hidden, 1))
+    layers.append(torchlip.FrobeniusLinear(dim_hidden, 1, bias=bias))
     model = torchlip.Sequential(*layers, k_coef_lip=k_coeff_lip)
     return model
 
