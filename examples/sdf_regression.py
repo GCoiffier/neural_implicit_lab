@@ -42,8 +42,7 @@ M.mesh.save(pc, os.path.join(OUTPUT_DIR, "train_pts.geogram_ascii"))
 ###### Training 
 
 # setup model
-model = IL.nn.SirenNet(geometry.dim, 128, 6).to(DEVICE)
-# model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 6).to(DEVICE)
+model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 10).to(DEVICE)
 # model = IL.nn.DenseLipSDP(geometry.dim, 128, 6).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
@@ -52,7 +51,7 @@ config = TrainingConfig(
     BATCH_SIZE=100,
     TEST_BATCH_SIZE = 10000,
     N_EPOCHS=100,
-    LEARNING_RATE=1e-4,
+    LEARNING_RATE=1e-3,
     DEVICE=DEVICE,
     OPTIMIZER="adam"
 )

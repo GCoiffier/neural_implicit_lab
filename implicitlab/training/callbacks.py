@@ -65,22 +65,23 @@ class LoggerCB(Callback):
 
 class CheckpointCB(Callback):
 
-    def __init__(self, save_folder: str, when: list):
+    def __init__(self, save_folder: str, freq: int):
         """A Callback responsible for saving the model currently in training into a file
 
         Args:
             save_folder (str): folder into which the model will be saved. The filename if formatted as `model_e{epoch}.pt`
-            when (list): list of epochs when the model should be saved onto dist
+            freq (int): frequency (in terms of number of epochs) at which a file is saved
         """
         self.save_folder: str = save_folder
-        self.when = when
+        self.freq: int = freq
 
     def callOnEndTrain(self, trainer, model):
         epoch = trainer.metrics["epoch"]
-        if epoch>0 and epoch in self.when:
+        if epoch!=0 and epoch%self.freq==0:
             name = f"model_e{epoch}.pt"
             path = os.path.join(self.save_folder, name)
             save_model(model, path)
+
 
 class Render2DCB(Callback):
 
@@ -128,7 +129,7 @@ class Render2DCB(Callback):
             )
 
 class MarchingCubeCB(Callback):
-    def __init__(self, save_folder: str, freq: int, domain: M.geometry.AABB = None, res: int = 100, iso=0):
+    def __init__(self, save_folder: str, freq: int, domain: M.geometry.AABB = None, res: int = 100, iso=0, prefix: str = ""):
         """A Callback that makes a snapshot of a 3D neural implicit by using the marching cubes algorithm to extract some level sets.
 
         Args:
@@ -137,6 +138,7 @@ class MarchingCubeCB(Callback):
             domain (M.geometry.AABB, optional): AABB domain over which the grid is defined. If not provided, the default domain will be [-1.2 ; 1.2]^3. Defaults to None.
             res (int, optional): Grid resolution for marching cubes. res^3 values will be sampled from the neural model. Defaults to 100.
             iso (int, optional): Which iso-level will be reconstructed. Several levels can be provided in a list. Defaults to 0.
+            prefix (str, optional): prefix for the name of the saved file. The name will have the form <prefix>_e<n_epoch>_iso<iso_value>. Defaults to the empty string.
         """
         super().__init__()
         self.save_folder = save_folder
@@ -150,6 +152,9 @@ class MarchingCubeCB(Callback):
             self.iso = [iso]
         else:
             self.iso = iso
+        self.prefix = prefix
+        if len(self.prefix)>0 and self.prefix[-1]!='_':
+            self.prefix += '_'
     
     def callOnEndTrain(self, trainer, model):
         epoch = trainer.metrics["epoch"]
@@ -163,7 +168,8 @@ class MarchingCubeCB(Callback):
                     self.res, 
                     trainer.config.TEST_BATCH_SIZE)
                 for (n,off),mesh in iso_surfaces.items():
-                    M.mesh.save(mesh, os.path.join(self.save_folder, f"e{epoch:04d}_n{n:02d}_iso{round(1000*off)}.obj"))
+                    M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_iso{round(1000*off)}.obj"))
+                    # M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_n{n:02d}_iso{round(1000*off)}.obj"))
             except Exception as e:
                 print("[ERROR] Marching Cube Callback:", e)
                 pass

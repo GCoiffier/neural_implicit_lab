@@ -50,7 +50,7 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain : M.ge
 
     if contour_path is not None:
         plt.clf()
-        norm = colors.TwoSlopeNorm(vmin=vmin, vmax=vmax, vcenter=0)
+        norm = colors.TwoSlopeNorm(vmin=-1, vmax=1, vcenter=0)
         plt.imshow(img, cmap="bwr", norm=norm)
         plt.axis("off")
         # cs = plt.contourf(X,-Y,img, levels=np.linspace(-0.1,0.1,11), cmap="seismic", extend="both")

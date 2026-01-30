@@ -72,6 +72,15 @@ def prepare_geometry(geom : M.mesh.Mesh):
     return geom
 
 def load_geometry(file_path : str):
+    """Loads a geometrical object from a file on the disk.
+
+    Args:
+        file_path (str): path to the file. Supported formats are .obj, .mesh, .stl, .xyz and .geogram_ascii
+
+
+    Returns:
+        mouette.mesh.Mesh: a geometry object (whose type depend on what's been read from the file). Can be a PointCloud, a Polyline or a SurfaceMesh.
+    """
     try:
         raise NotImplementedError
         geom = meshio.read(file_path)

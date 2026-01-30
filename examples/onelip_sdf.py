@@ -23,7 +23,7 @@ train_field = IL.fields.Occupancy(geometry, v_in=-1, v_out=1, v_on=-1)
 train_sampling_strat = IL.sampling_strategy.CombinedStrategy([
     IL.sampling_strategy.UniformBox(geometry),
     IL.sampling_strategy.NearGeometryGaussian(geometry, 0.02)
-], [1., 9.])
+], [1., 6.])
 train_sampler = PointSampler(geometry, train_sampling_strat, train_field)
 points, val = train_sampler.sample(20_000 if geometry.dim==2 else 100_000)
 
@@ -57,8 +57,8 @@ test_data = IL.data.make_tensor_dataset((test_pts, test_val), DEVICE)
 ###### Training
 # model = IL.nn.DenseLipBjorck(geometry.dim, 128, 20).to(DEVICE)
 # model = IL.nn.DenseLipAOL(geometry.dim, 128, 10).to(DEVICE)
-# model = IL.nn.DenseLipSDP(geometry.dim, 128, 20, activation=nn.Softplus(10)).to(DEVICE)
-model = IL.nn.DenseLipSDP(geometry.dim, 128, 12).to(DEVICE)
+model = IL.nn.DenseLipCPL(geometry.dim, 128, 12).to(DEVICE)
+# model = IL.nn.DenseLipSDP(geometry.dim, 128, 12).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
@@ -83,7 +83,7 @@ trainer = hKRTrainer(TrainingConfig(
     N_EPOCHS=500,
     LEARNING_RATE=1e-2,
     DEVICE=DEVICE,
-    OPTIMIZER="adam"), 
+    OPTIMIZER="muon"), 
     margin=MARGIN, 
     lmbd=10.
 )

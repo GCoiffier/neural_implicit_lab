@@ -27,7 +27,7 @@ M.mesh.save(pc, "output/train_pts.geogram_ascii")
 ###### Training 
 
 # Setup model
-model = IL.nn.SirenNet(geometry.dim, 64, 6).to(DEVICE)
+model = IL.nn.SirenNet(geometry.dim, 128, 6).to(DEVICE)
 # model = IL.nn.MultiLayerPerceptron(geometry.dim, 64, 6).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 

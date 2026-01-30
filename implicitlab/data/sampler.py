@@ -24,25 +24,25 @@ class PointSampler:
         n_points: int,
         on_ratio: float = 0.01,
     ):
-        """_summary_
+        """Sample a given number of points according to the provided sampling strategy.
 
         Args:
-            n_points (int): _description_
-            on_ratio (float, optional): _description_. Defaults to 0.01.
+            n_points (int): number of points to sample.
+            on_ratio (float, optional): ratio of sampled points that are taken on the geometry rather than around it. Defaults to 0.01.
 
         Returns:
-            _type_: _description_
+            Tuple(np.ndarray, np.ndarray): An array of sampled points and an array of the field value at these points.
         """
         on_ratio = min(max(on_ratio, 0.), 1.)
         if on_ratio<1e-14:
            self.points = self.sampler.sample(n_points)
            self.field = self.field_generator.compute(self.points)
         elif on_ratio>1-1e-14:
-            self.points = self._sample_geometry(n_points)
+            self.points = self.sample_geometry(n_points)
             self.field = self.field_generator.compute_on(self.points)
         else: 
             n_on = int(on_ratio*n_points)
-            pts_on = self._sample_geometry(n_on)
+            pts_on = self.sample_geometry(n_on)
             field_on = self.field_generator.compute_on(pts_on)
             
             n_other = n_points - n_on
@@ -57,7 +57,15 @@ class PointSampler:
         return self.points, self.field
     
 
-    def _sample_geometry(self, n_points) -> np.ndarray:
+    def sample_geometry(self, n_points: int) -> np.ndarray:
+        """Sample a given number of points _on_ the geometrical object provided.
+
+        Args:
+            n_points (int): number of points to sample
+
+        Returns:
+            np.ndarray: array of sampled points
+        """
         match type(self.geom_object):
             case M.mesh.PointCloud:
                 if n_points < len(self.geom_object.vertices):
