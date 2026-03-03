@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from skimage.measure import marching_cubes
 from ..utils import forward_in_batches
+from .queries import estimate_local_Lipschitz_constant
 
 
 def render_sdf_2d(render_path, contour_path, gradient_path, model, domain : M.geometry.AABB, device, res=1000, batch_size=1000):
@@ -150,6 +151,34 @@ def render_sdf_quad(render_path, contour_path, gradient_path, model, P0, P1, P2,
         plt.axis("off")
         plt.colorbar(pos)
         plt.savefig(gradient_path, bbox_inches='tight', pad_inches=0)
+
+
+def render_lip_constant_2d(img_path: str, model, domain : M.geometry.AABB, device, res=1000, batch_size=5000):
+    """Renders a 2D image of the local Lipschitz constant (maximal gradient norm in a neighborhood) of a 2D model.
+
+    Args:
+        img_path (str): path to export the render.
+        model (torch.nn.Module): the neural model
+        domain (M.geometry.AABB): domain onto which the function values are computed.
+        device (str): device onto which the computation are performed.
+        res (int, optional): resolution of the marching cubes grid. Defaults to 100.
+        batch_size (int, optional): batch size for forward computation. Defaults to 5000.
+    """
+    assert domain.dim == 2
+
+    X = np.linspace(domain.mini[0], domain.maxi[0], res)
+    resY = round(res * domain.span[1]/domain.span[0])
+    Y = np.linspace(domain.mini[1], domain.maxi[1], resY)
+
+    pts = np.hstack((np.meshgrid(X,Y))).swapaxes(0,1).reshape(2,-1).T
+    lip_values = estimate_local_Lipschitz_constant(model, pts, device, batch_size=batch_size)
+    img = lip_values.reshape((res,resY)).T
+    img = img[::-1,:]
+    plt.clf()
+    pos = plt.imshow(img, cmap="Blues_r")
+    plt.axis('off')
+    plt.colorbar(pos)
+    plt.savefig(img_path, bbox_inches='tight', pad_inches=0)
 
 
 def reconstruct_surface_marching_cubes(

@@ -3,6 +3,7 @@ from ..queries.visualize import render_sdf_2d, reconstruct_surface_marching_cube
 import mouette as M
 import os
 import csv
+import torch
 
 class Callback:
     """
@@ -65,27 +66,31 @@ class LoggerCB(Callback):
 
 class CheckpointCB(Callback):
 
-    def __init__(self, save_folder: str, freq: int):
+    def __init__(self, save_folder: str, freq: int, only_weights: bool = False):
         """A Callback responsible for saving the model currently in training into a file
 
         Args:
             save_folder (str): folder into which the model will be saved. The filename if formatted as `model_e{epoch}.pt`
             freq (int): frequency (in terms of number of epochs) at which a file is saved
+            only_weights (bool, optional): whether to save the whole model (as a pytorch trace) or only the model's state dict. In the latter case, the exact model architecture is not saved. Defaults to False.
         """
         self.save_folder: str = save_folder
         self.freq: int = freq
+        self.only_weights: bool = only_weights
 
     def callOnEndTrain(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if epoch!=0 and epoch%self.freq==0:
-            name = f"model_e{epoch}.pt"
+            name = f"{'weights' if self.only_weights else 'model'}_e{epoch}.pt"
             path = os.path.join(self.save_folder, name)
-            save_model(model, path)
-
+            if self.only_weights:
+                torch.save(model.state_dict(), path)
+            else:
+                save_model(model, path)
 
 class Render2DCB(Callback):
 
-    def __init__(self, save_folder: str, freq: int, plot_domain: M.geometry.AABB = None, resolution: int = 800, output_contours: bool = True, output_gradient_norm: bool = True):
+    def __init__(self, save_folder: str, freq: int, plot_domain: M.geometry.AABB = None, resolution: int = 800, output_contours: bool = True, output_gradient_norm: bool = True, prefix: str = ""):
         """A Callback that makes a snapshot of a 2D neural implicit by sampling its values on a grid. Can also sample the gradient's norm and make a contour plot.
 
         Args:
@@ -95,6 +100,7 @@ class Render2DCB(Callback):
             resolution (int, optional): Resolution of the snapshot grid. resolution^2 samples will be computed from the neural implicit model. Defaults to 800.
             output_contours (bool, optional): Whether to output a contour plot of the neural field. Defaults to True.
             output_gradient_norm (bool, optional): Whether to also output a plot of the norm of the neural field's gradient. Defaults to True.
+            prefix (str, optional): prefix for the name of the saved file. The name will have the form <prefix>_e<n_epoch>_iso<iso_value>. Defaults to the empty string.
 
         Warning:
             Fails if the neural implicit currently training is not 2-dimensionnal.
@@ -110,13 +116,16 @@ class Render2DCB(Callback):
         self.res = resolution
         self.output_contours = output_contours
         self.output_gradient_norm = output_gradient_norm
+        self.prefix = prefix
+        if len(self.prefix)>0 and self.prefix[-1]!='_':
+            self.prefix += '_'
 
     def callOnEndTrain(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if self.freq>0 and epoch%self.freq==0:
-            render_path = os.path.join(self.save_folder, f"render_{epoch}.png")
-            contour_path = os.path.join(self.save_folder, f"contour_{epoch}.png") if self.output_contours else None
-            gradient_path = os.path.join(self.save_folder, f"grad_{epoch}.png") if self.output_gradient_norm else None
+            render_path = os.path.join(self.save_folder, self.prefix + f"render_{epoch}.png")
+            contour_path = os.path.join(self.save_folder, self.prefix + f"contour_{epoch}.png") if self.output_contours else None
+            gradient_path = os.path.join(self.save_folder, self.prefix + f"grad_{epoch}.png") if self.output_gradient_norm else None
             render_sdf_2d(
                 render_path,
                 contour_path,

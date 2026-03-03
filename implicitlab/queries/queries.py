@@ -1,6 +1,7 @@
 import numpy as np
 import mouette as M
 import torch
+from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from scipy.spatial import KDTree
 from tqdm import trange
@@ -158,12 +159,13 @@ def sample_iso_projection(
 
     
 class _RayTracingImplicitSampler:
-    def __init__(self, model : torch.nn.Module, device : str, iso : float, thresh : float = 1e-6): 
+    def __init__(self, model : torch.nn.Module, device: str, iso: float, threshold: float = 1e-6, max_iter: int = 1000): 
         self.model = model
         self.device : str = device
-        self.threshold = thresh
+        self.threshold = threshold
         self.step_bound = 1.
         self.iso = iso
+        self.max_iter = max_iter
         self._dim = None
     
     @property
@@ -186,7 +188,7 @@ class _RayTracingImplicitSampler:
         
         delta = torch.abs(d)
         not_converged = (t < max_t) # march every ray till the end
-        for iter in trange(2000):
+        for iter in trange(self.max_iter):
             if not torch.any(not_converged): break 
             
             # add samples near surface and step over the surface for these samples 
@@ -338,6 +340,7 @@ def sample_iso_raytraced(
     iso : float = 0.,
     device : str = "cpu",
     threshold : float = 1e-4,
+    max_iter: int = 1000
 ) -> np.ndarray:
     """
     Sample an isosurface of a neural implicit function by tracing rays intersecting the object and returning all ray-shape intersection points.
@@ -348,6 +351,7 @@ def sample_iso_raytraced(
         iso (float, optional): _description_. Defaults to 0..
         device (str, optional): _description_. Defaults to "cpu".
         threshold (float, optional): _description_. Defaults to 1e-4.
+        max_iter (int, optional): _description_. Defaults to 1000.
 
     Returns:
         np.ndarray: sampled points
@@ -356,7 +360,7 @@ def sample_iso_raytraced(
         - Uniform Sampling of Surfaces by Casting Rays, Ling et al., 2025  
         - https://github.com/iszihan/implicit-uniform-sampler/blob/main/ImplicitUniformSampler/sampler.py  
     """
-    sampler = _RayTracingImplicitSampler(model, device, iso, threshold)
+    sampler = _RayTracingImplicitSampler(model, device, iso, threshold, max_iter)
     return sampler.sample(n_rays)
 
 
@@ -395,3 +399,32 @@ def sample_skeleton(
     if descent_steps>0:
         pts = gradient_descent(pts, model, device, step_size=1e-2, batch_size=batch_size, max_steps=descent_steps)
     return pts
+
+
+
+def estimate_local_Lipschitz_constant(model, queries: np.ndarray, device: str, stdv: float = 1e-2, n_samples: int = 100, batch_size: int = 5000):
+    """Estimates the lipschitz constant near a point. This function samples points around the query points and returns the max of the gradient norm over the samples.
+
+    Args:
+        model (torch.nn.Module): the neural model to evaluate.
+        queries (np.ndarray): points at which the lipschitz constant needs to be evaluated
+        device (str): device onto which computations are performed.
+        stdv (float, optional): standard deviation of the gaussian noise applied for sampling around query points. Standard deviation can be given as an array of size (queries.shape[0]) to specify different values for each query points. Defaults to 1e-2.
+        n_samples (int, optional): number of drawn samples for each query point. Defaults to 100.
+        batch_size (int, optional): batch size for parallel computation. Defaults to 5000.
+
+    Returns:
+        np.ndarray : a numpy array containing the value of the local Lipschitz constant at each query point.
+    """
+    # generate n_samples point per query point as a gaussian centered at the query with standard deviation stdv
+    all_points = torch.repeat_interleave(torch.Tensor(queries), n_samples, dim=0)
+    if isinstance(stdv, float):
+        all_points += torch.randn_like(all_points)*stdv
+    else:
+        all_points += torch.randn_like(all_points)*torch.repeat_interleave(torch.Tensor(stdv),n_samples,dim=0)
+    # query the gradients
+    _, grad = forward_in_batches(model, all_points, compute_grad=True, device=device, batch_size=batch_size, use_tqdm=True)
+    gd_norm = torch.norm(torch.Tensor(grad).to(device),dim=1)
+    gd_norm = gd_norm.reshape((1,gd_norm.shape[0]))
+    gd_norm_max = -F.max_pool1d(-gd_norm, kernel_size=n_samples, stride=n_samples)
+    return torch.squeeze(gd_norm_max).cpu().numpy()

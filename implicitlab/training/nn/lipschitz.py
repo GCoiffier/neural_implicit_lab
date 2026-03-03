@@ -4,13 +4,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 from deel import torchlip
 
+from .lip_activations import Householder
+
 #######################################################################################################################################
 
 def DenseLipBjorck(
     dim_in: float,
     dim_hidden: float,
     n_layers: int,
-    group_sort_size: int=0, 
+    group_sort_size: int = 2, 
     bias: bool = True,
     k_coeff_lip: float=1.
 ):
@@ -21,7 +23,7 @@ def DenseLipBjorck(
         dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
         dim_hidden (int): dimension of the hidden layers.
         n_layers (int): number of hidden layers.
-        group_sort_size (int, optional): Size of the GroupSort activation function. If set to zero, the activation will be a FullSort. Defaults to 0.
+        group_sort_size (int, optional): Size of the GroupSort activation function. If set to zero, the activation will be a FullSort. Defaults to 2 (minimum).
         bias (bool, optional): whether to include bias vectors in the layers. Defaults to True.
         k_coeff_lip (float, optional): Lipschitz constant of the network. Defaults to 1.
 
@@ -39,7 +41,6 @@ def DenseLipBjorck(
     layers.append(torchlip.FrobeniusLinear(dim_hidden, 1, bias=bias))
     model = torchlip.Sequential(*layers, k_coef_lip=k_coeff_lip)
     return model
-
 
 #######################################################################################################################################
 

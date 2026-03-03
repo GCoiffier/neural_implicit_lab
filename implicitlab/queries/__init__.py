@@ -1,1 +1,1 @@
-from .queries import sample_iso_projection, sample_iso_raytraced, sample_skeleton, gradient_descent, project_onto_iso
+from .queries import sample_iso_projection, sample_iso_raytraced, sample_skeleton, gradient_descent, project_onto_iso, estimate_local_Lipschitz_constant
