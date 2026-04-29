@@ -27,9 +27,9 @@ M.mesh.save(M.procedural.vector_field(points, normals, length_mult=0.1), "output
 ###### Training 
 
 # Setup model
-model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 5).to(DEVICE)
-# model = IL.nn.SirenNet(geometry.dim, 128, 5).to(DEVICE)
+model = IL.nn.SirenNet(geometry.dim, 128, 5).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
+print("\n\n")
 
 # Setup trainer
 class HotspotTrainer(Trainer):
@@ -41,9 +41,9 @@ class HotspotTrainer(Trainer):
         super().__init__(config)
         self.lmbd = lmbd
         self.weights = {
-            "on" : 10.,
-            "eikonal": 1.,
-            "normals": 0.1,
+            "on" : 50.,
+            "eikonal": 0.1,
+            "normals": 1.,
             "heat": 1.
         }
 
@@ -58,7 +58,7 @@ class HotspotTrainer(Trainer):
         Y_on = model(pts)
         batch_loss = self.weights["on"] * torch.mean(torch.abs(Y_on))
 
-        pts_out = 2.1*torch.rand_like(pts)-1
+        pts_out = 3.*torch.rand_like(pts)-1.5
         pts_out.requires_grad = True
         Y_out = model(pts_out)
 
@@ -87,8 +87,8 @@ trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
 if geometry.dim == 2:
     trainer.add_callbacks(callbacks.Render2DCB("output", 10))
 elif geometry.dim == 3:
-    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 10, res=300, iso=0.))
+    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 50, res=400, iso=0.))
 trainer.set_training_data(train_data)
 trainer.train(model)
 
-IL.nn.save_model(model, "output/model.pt")
+torch.save(model.state_dict(), f"output/hotspot_128x5.pt")

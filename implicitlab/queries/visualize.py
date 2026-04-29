@@ -8,7 +8,7 @@ from ..utils import forward_in_batches
 from .queries import estimate_local_Lipschitz_constant
 
 
-def render_sdf_2d(render_path, contour_path, gradient_path, model, domain : M.geometry.AABB, device, res=1000, batch_size=1000):
+def render_sdf_2d(render_path, contour_path, gradient_path, model, domain: M.geometry.AABB, device, res=1000, batch_size: int=1000, **kwargs):
     """ Renders a 2D SDF
 
     Args:
@@ -19,7 +19,10 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain : M.ge
         domain (M.geometry.AABB): axis aligned bounding box of dimension 2to represent the plotting domain.
         device (str): cpu or cuda
         res (int, optional): Image resolution. Defaults to 800.
-        batch_size (int, optional): Size of forward batches. Defaults to 1000.        
+        batch_size (int, optional): Size of forward batches. Defaults to 1000.
+
+    Additionnal Args:
+        n_contours (int, optional): Defaults to 16.    
     """
     assert domain.dim == 2
 
@@ -56,7 +59,8 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain : M.ge
         plt.axis("off")
         # cs = plt.contourf(X,-Y,img, levels=np.linspace(-0.1,0.1,11), cmap="seismic", extend="both")
         # cs.changed()
-        plt.contour(img, levels=16, colors='k', linestyles="solid", linewidths=0.3)
+        n_contours = kwargs.get("n_contours", 16)
+        plt.contour(img, levels=n_contours, colors='k', linestyles="solid", linewidths=0.3)
         plt.contour(img, levels=[0.], colors='k', linestyles="solid", linewidths=0.6)
         plt.savefig(contour_path, bbox_inches='tight', pad_inches=0, dpi=200)
 
@@ -187,7 +191,8 @@ def reconstruct_surface_marching_cubes(
     device : str, 
     iso : int = 0, 
     res : int = 100, 
-    batch_size : int =5000
+    batch_size : int = 5000,
+    use_tqdm : bool = False
 ) -> dict:
     """Extracts isosurfaces of a given neural implicit by using the Marching Cube algorithm.
 
@@ -198,6 +203,7 @@ def reconstruct_surface_marching_cubes(
         iso (int, optional): value of the isosurface. Several values can be provided in a list. If that is the case, one mesh per isovalue will be produced. Defaults to 0.
         res (int, optional): resolution of the marching cubes grid. Defaults to 100.
         batch_size (int, optional): batch size for forward computation. Defaults to 5000.
+        use_tqdm (bool, optional): whether to display a progress bar during computation. Defaults to False.
 
     Returns:
         dict: returns a dictionnary of ((i,iso), mesh) where i is a unique identifier, iso is the value of the isovalue and mesh is the output surface mesh (mouette.mesh.SurfaceMesh type).
@@ -211,7 +217,7 @@ def reconstruct_surface_marching_cubes(
     ### Feed grid to model
     L = [np.linspace(domain.mini[i], domain.maxi[i], res) for i in range(3)]
     pts = np.hstack((np.meshgrid(*L))).swapaxes(0,1).reshape(3,-1).T
-    dist_values = forward_in_batches(model, pts, device, compute_grad=False, batch_size=batch_size)
+    dist_values = forward_in_batches(model, pts, device, compute_grad=False, batch_size=batch_size, use_tqdm=use_tqdm)
     print("Implicit values:", np.amin(dist_values), np.amax(dist_values))
     dist_values = dist_values.reshape((res,res,res))
 

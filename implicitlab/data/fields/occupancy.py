@@ -62,13 +62,18 @@ class _Occupancy2D(_BaseOccupancy):
 
 class _Occupancy3D(_BaseOccupancy):
 
-    def __init__(self, geom : M.mesh.PolyLine, v_in, v_out, v_on):
+    def __init__(self, geom : M.mesh.PolyLine, v_in, v_out, v_on, threshold: float =0.5):
         super().__init__(v_in, v_out, v_on)
         self.geom_object = geom
+        self.threshold = threshold
     
     def compute(self, query : np.ndarray) -> np.ndarray:
         wn = igl.fast_winding_number(np.asarray(self.geom_object.vertices), np.asarray(self.geom_object.faces, dtype=int), query)
-        occ = np.where(wn>=0.5, self.v_in, self.v_out)
+        mean_wn = np.mean(wn)
+        if mean_wn>0:
+            occ = np.where(wn>=self.threshold, self.v_in, self.v_out)
+        else:
+            occ = np.where(wn<=-self.threshold, self.v_in, self.v_out)
         return occ
 
 #######################################################################################

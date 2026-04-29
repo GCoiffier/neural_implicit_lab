@@ -40,7 +40,7 @@ def project_onto_iso(
         for _ in range(max_steps):
             batch.requires_grad = True
             dist = model(batch) - iso
-            dist.backward(torch.ones_like(dist))
+            dist.sum().backward()
             grad = batch.grad
             if torch.all( torch.abs(dist) < precision): break
             if normalize_grad:

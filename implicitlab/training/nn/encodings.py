@@ -8,16 +8,16 @@ from ...data.sample_utils import sample_points_and_normals2D
 
 class RandomFourierEncoding(nn.Module):
 
-    def __init__(self, geometry : M.mesh.Mesh, dim_encoded: int, stdv: float = 1.):
+    def __init__(self, input_dim: int, encoded_dim: int, stdv: float = 1.):
         """Encodes a given position into different frequencies of trigonometric functions :
 
-        $$x \\mapsto [\cos(2\pi b x), \sin(2 \pi b x)]$$
+        $$x \\mapsto [\\cos(2\\pi b x), \\sin(2 \\pi b x)]$$
 
         where $b$ is sampled from a normal distribution of zero mean (and provided standard deviation)
 
         Args:
-            geometry (mouette.Mesh): the input geometry. Only the dimensionality attribute (`geometry.dim`) is accessed, but argument is kept for consistency with other encodings.
-            dim_encoded (int): size of the final encoded vector. Should be an even number (as both sin and cos of every frequency is computed). the tensor `b` will have shape `(geometry.dim, dim_encoded//2)`
+            input_dim (int): dimension of the input points (usually 2 or 3).
+            encoded_dim (int): size of the final encoded vector. Should be an even number (as both sin and cos of every frequency is computed). the tensor `b` will have shape `(geometry.dim, dim_encoded//2)`
             stdv (float, optional): Standard variation of the normal distribution used to compute `b`. Defaults to 1..
 
         Raises:
@@ -28,10 +28,9 @@ class RandomFourierEncoding(nn.Module):
             - [https://github.com/jmclong/random-fourier-features-pytorch/tree/main](https://github.com/jmclong/random-fourier-features-pytorch/tree/main)
         """
         super().__init__()
-        dim_in = geometry.dim
-        if dim_encoded%2==1:
+        if encoded_dim%2==1:
             raise ValueError("The size should be an even number.")
-        b = np.random.normal(0, stdv, size=(dim_in, dim_encoded//2))
+        b = np.random.normal(0, stdv, size=(input_dim, encoded_dim//2))
         self.b = nn.Parameter(torch.FloatTensor(b), requires_grad=False)
 
     def forward(self, x):
@@ -43,7 +42,7 @@ class HalfPlaneEncoding(nn.Module):
     def __init__(self, geometry, n_points: int):
         """Encoding that considers points with normals sampled on the geometry and applies the signed distance to each corresponding hyperplanes:
 
-        $$x \\mapsto \langle n, x-p \\rangle$$
+        $$x \\mapsto \\langle n, x-p \\rangle$$
 
         where $(p,n)$ are points and normals.
 
@@ -104,7 +103,7 @@ class GaussianEncoding(PointDistanceEncoding):
     def __init__(self, geometry, n_points: int, sample_on_surface:bool = True, stdv=1.):
         """ Variant of the PointDistanceEncoding where distance are then fed into a Gaussian kernel:
 
-        $$x \\mapsto e^{ - \\frac{||x-p||^2}{\sigma}}$$
+        $$x \\mapsto e^{ - \\frac{||x-p||^2}{\\sigma}}$$
 
         Args:
             geometry (mouette.Mesh): the input geometry.

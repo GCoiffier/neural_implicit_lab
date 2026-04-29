@@ -22,7 +22,7 @@ sampling_strat = IL.sampling_strategy.CombinedStrategy([
 ], [2., 1.])
 
 sampler = IL.PointSampler(geometry, sampling_strat, field)
-points, val = sampler.sample(100_000)
+points, val = sampler.sample(500_000)
 train_data = IL.data.make_tensor_dataset((points, val), DEVICE)
 
 test_pts, test_val = sampler.sample(5_000)
@@ -38,8 +38,8 @@ M.mesh.save(pc, "output/train_pts.geogram_ascii")
 model = torch.nn.Sequential(
     # IL.nn.encodings.HalfPlaneEncoding(geometry, 1000),
     # IL.nn.encodings.PointDistanceEncoding(geometry, 1000),
-    # IL.nn.encodings.RandomFourierEncoding(geometry, 1000),
-    IL.nn.encodings.GaussianEncoding(geometry, 1000),
+    IL.nn.encodings.RandomFourierEncoding(geometry, 1000),
+    # IL.nn.encodings.GaussianEncoding(geometry, 1000),
     IL.nn.MultiLayerPerceptron(1000, 128, 5)
 ).to(DEVICE)
 # model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 5).to(DEVICE)
@@ -48,10 +48,10 @@ print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
 config = TrainingConfig(
-    BATCH_SIZE=100,
+    BATCH_SIZE=1000,
     TEST_BATCH_SIZE = 10000,
     N_EPOCHS=200,
-    LEARNING_RATE=1e-3,
+    LEARNING_RATE=1e-4,
     DEVICE=DEVICE
 )
 

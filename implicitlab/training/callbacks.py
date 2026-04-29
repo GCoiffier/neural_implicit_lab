@@ -168,17 +168,19 @@ class MarchingCubeCB(Callback):
     def callOnEndTrain(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if self.freq>0 and epoch%self.freq==0:
-            try:
-                iso_surfaces = reconstruct_surface_marching_cubes(
-                    model, 
-                    self.domain, 
-                    trainer.config.DEVICE, 
-                    self.iso, 
-                    self.res, 
-                    trainer.config.TEST_BATCH_SIZE)
-                for (n,off),mesh in iso_surfaces.items():
-                    M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_iso{round(1000*off)}.obj"))
-                    # M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_n{n:02d}_iso{round(1000*off)}.obj"))
-            except Exception as e:
-                print("[ERROR] Marching Cube Callback:", e)
-                pass
+            # try:
+            print(f"Running marching cube with resolution {self.res}^3")
+            iso_surfaces = reconstruct_surface_marching_cubes(
+                model, 
+                self.domain, 
+                trainer.config.DEVICE, 
+                self.iso, 
+                self.res, 
+                trainer.config.TEST_BATCH_SIZE,
+                use_tqdm=True)
+            for (n,off),mesh in iso_surfaces.items():
+                M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_iso{round(1000*off)}.obj"))
+                # M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_n{n:02d}_iso{round(1000*off)}.obj"))
+            # except Exception as e:
+            #     print("[ERROR] Marching Cube Callback:", e)
+            #     pass
