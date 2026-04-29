@@ -30,7 +30,7 @@ dependencies = [
 "triangle",
 "tqdm",
 "deel-torchlip>=1.0.5",
-"meshio",
+"meshio"
 ]
 
 
