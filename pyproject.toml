@@ -24,13 +24,13 @@ dependencies = [
 "numpy",
 "scipy",
 "scikit-image",
-"matplotlib"
+"matplotlib",
 "mouette==1.2.7.1",
 "libigl>=2.6.1",
 "triangle",
 "tqdm",
-"deel-torchlip>=1.0.5"
-"meshio"
+"deel-torchlip>=1.0.5",
+"meshio",
 ]
 
 
