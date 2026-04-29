@@ -29,7 +29,7 @@ dependencies = [
   "matplotlib",
   "meshio",
   "triangle",
-  "libigl==2.6.3",
+  "libigl=2.6.3",
   "deel-torchlip>=1.0.5",
 ]
 
