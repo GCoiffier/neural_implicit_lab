@@ -25,7 +25,7 @@ dependencies = [
 "scipy",
 "scikit-image",
 "matplotlib",
-"mouette=1.2.7.1",
+"mouette",
 "libigl>=2.6.1",
 "triangle",
 "tqdm",
