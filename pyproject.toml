@@ -27,7 +27,7 @@ dependencies = [
 "scikit-image",
 "scipy",
 "matplotlib",
-"meshio"
+"meshio",
 "triangle",
 "libigl>=2.6.1",
 "deel-torchlip>=1.0.5",
