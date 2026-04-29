@@ -26,13 +26,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Show pyproject.toml
-        run: |
-          echo "---- pyproject.toml (raw) ----"
-          cat pyproject.toml
-          echo "---- line numbers ----"
-          nl -ba pyproject.toml
-
       - name: Build release distributions
         run: |
           pip install --upgrade pip

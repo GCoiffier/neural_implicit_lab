@@ -17,7 +17,7 @@ license = { file = "LICENSE" }
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent"
+    "Operating System :: OS Independent",
 ]
 dependencies = [
   "tqdm",
@@ -29,8 +29,8 @@ dependencies = [
   "matplotlib",
   "meshio",
   "triangle",
-  # "libigl=2.6.3",
-  "deel-torchlip>=1.0.5"
+  "libigl=2.6.3",
+  "deel-torchlip>=1.0.5",
 ]
 
 
