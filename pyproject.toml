@@ -20,17 +20,17 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-"torch>=2.9.1",
-"numpy",
-"scipy",
-"scikit-image",
-"matplotlib",
-"mouette",
-"libigl>=2.6.1",
-"triangle",
 "tqdm",
-"deel-torchlip>=1.0.5",
+"numpy",
+"torch>=2.9.1",
+"mouette",
+"scikit-image",
+"scipy",
+"matplotlib",
 "meshio"
+"triangle",
+"libigl>=2.6.1",
+"deel-torchlip>=1.0.5",
 ]
 
 
