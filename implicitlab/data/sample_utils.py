@@ -28,3 +28,10 @@ def sample_points_and_normals2D(polyline, n_pts):
     if sign_count<0:
         sampled_normals *=-1
     return sampled_pts, sampled_normals
+
+
+def sample_unit_disk(n_pts):
+    r = np.sqrt(np.random.random(n_pts))
+    theta = 2*np.pi*np.random.random(n_pts)
+    pts = np.vstack([r*np.cos(theta), r*np.sin(theta)]).T
+    return pts

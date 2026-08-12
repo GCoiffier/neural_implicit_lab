@@ -41,9 +41,11 @@ class Trainer:
         self.test_data_loader : torch.utils.data.DataLoader = None
 
         self.optimizer = None
+        self._has_scheduler : bool = False
+        self.scheduler = None
         self.callbacks = []
         self.metrics = dict()
-    
+
     def set_training_data(self, data: TensorDataset, shuffle: bool = True):
         if not isinstance(data, TensorDataset):
             raise Exception("Please provide a torch.utils.data.TensorDataset object to this function")
@@ -73,7 +75,19 @@ class Trainer:
             case _:
                 # Adam by default
                 return torch.optim.Adam(model.parameters(), lr=self.config.LEARNING_RATE) 
-            
+
+    def add_scheduler(self, scheduler_cls : torch.optim.lr_scheduler.LRScheduler, *args, **kwargs):
+        self._scheduler_params = (scheduler_cls, args, kwargs)
+        self._has_scheduler = True
+
+    def step_scheduler(self):
+        if self.scheduler is None: return
+        last_lr = self.scheduler.get_last_lr()
+        self.scheduler.step()
+        cur_lr = self.scheduler.get_last_lr()
+        if last_lr != cur_lr:
+            print("Update learning rate to", cur_lr)
+
     def add_callbacks(self, *args):
         if len(args)==1 and isinstance(args[0],Iterable): args = args[0]
         for cb in args:
@@ -105,6 +119,10 @@ class Trainer:
         if self.train_data_loader is None:
             raise Exception("No training data was provided. Call the `set_training_data` before training.")
         self.optimizer = self.get_optimizer(model)
+        if self._has_scheduler:
+            scheduler_cls, scheduler_args, scheduler_kwargs = self._scheduler_params
+            self.scheduler = scheduler_cls(self.optimizer, *scheduler_args, **scheduler_kwargs)
+
         for epoch in range(self.config.N_EPOCHS):
             epoch += starting_epoch
             self.metrics["epoch"] = epoch+1
@@ -125,4 +143,5 @@ class Trainer:
             self.metrics["epoch_time"] = time.time() - t0
             for cb in self.callbacks:
                 cb.callOnEndTrain(self, model)
+            self.step_scheduler()                
             self.evaluate_model(model)

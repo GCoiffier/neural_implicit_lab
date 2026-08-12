@@ -1,4 +1,5 @@
-from .nn import save_model
+from ..nn import save_model
+from ..data import make_tensor_dataset, PointSampler
 from ..queries.visualize import render_sdf_2d, reconstruct_surface_marching_cubes
 import mouette as M
 import os
@@ -184,3 +185,32 @@ class MarchingCubeCB(Callback):
             # except Exception as e:
             #     print("[ERROR] Marching Cube Callback:", e)
             #     pass
+
+
+
+class ResampleCallback(Callback):
+
+    def __init__(self, sampler : PointSampler, n_points: int, device: str, freq: int = 1, on_ratio:float = 0.01):
+        """
+        A callback that regenerates the training dataset at a specifiec frequency
+        
+        Args:
+            sampler (PointSampler): The PointSampler object to be called that generates the points and their values.
+            n_points (int): number of points to sample.
+            device (str): on which device should the points be loaded.
+            freq (int, optional): frequency (in terms of number of epochs) at which the resampling is performed. Defaults to 1.
+            on_ratio (float, optional): proportion of points to sample on the geometry. See the PointSampler class for details. Defaults to 0.01.
+        """
+        super().__init__()
+        self.device : str = device
+        self.freq = freq
+        self.sampler : PointSampler = sampler
+        self.n_points : int = n_points
+        self.on_ratio : float = on_ratio
+
+    def callOnBeginTrain(self, trainer, model):
+        epoch = trainer.metrics["epoch"]
+        if self.freq>0 and epoch%self.freq==0:
+            sampled_data = self.sampler.sample(self.n_points, on_ratio=self.on_ratio)
+            train_data = make_tensor_dataset(sampled_data, self.device)
+            trainer.set_training_data(train_data, shuffle=(self.freq>1)) # no need to shuffle if resampling happens at each epoch
