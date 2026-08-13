@@ -2,6 +2,6 @@
 title: Loading and saving neural models
 ---
 
-:::implicitlab.training.nn.io
+:::implicitlab.nn.io
     options:
         heading_level: 2

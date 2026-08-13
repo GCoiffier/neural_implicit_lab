@@ -16,6 +16,6 @@ model = torch.nn.Sequential(
 
 ## Available encodings
 
-:::implicitlab.training.nn.encodings
+:::implicitlab.nn.encodings
     options:
         heading_level: 3

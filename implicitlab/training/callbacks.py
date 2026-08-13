@@ -11,25 +11,21 @@ class Callback:
     An empty Callback object to be called inside a Trainer (see trainers/base.py)
 
     Callback affect the trainer they are associated with, or provide log infos, or anything you can think of.
-    Inside a Trainer, they can be called at three points:
-    - At the beginning of an training epoch
-    - At the end of an training epoch
-    - At the end of a forward/backward pass
-    - At the end of a testing epoch
-    - At the very end of the training procedure
+    Inside a Trainer, they can be called at several points during training:
+    - At the very beginning/end of the training procedure
+    - At the beginning/end of an training epoch
+    - At the end of a training forward/backward pass
+    - At the end of a testing forward pass
     """
-    def callOnEndForward(self, trainer, model):
-        pass
+    def callOnBeginTrain(self, trainer, model): pass
+    def callOnEndTrain(self, trainer, model): pass
 
-    def callOnBeginTrain(self, trainer, model):
-        pass
-    
-    def callOnEndTrain(self, trainer, model):
-        pass
+    def callOnBeginEpoch(self, trainer, model): pass
+    def callOnEndEpoch(self, trainer, model): pass
 
-    def callOnEndTest(self, trainer, model):
-        pass
-    
+    def callOnEndForward(self, trainer, model): pass
+    def callOnEndTest(self, trainer, model): pass
+
 
 class LoggerCB(Callback):
 
@@ -46,7 +42,7 @@ class LoggerCB(Callback):
             writer = csv.DictWriter(csvfile, fieldnames=self.logged.keys())
             writer.writeheader()
 
-    def callOnEndTrain(self, trainer, model):
+    def callOnEndEpoch(self, trainer, model):
         self.logged.update({"epoch" :  trainer.metrics["epoch"]})
         self.logged.update({"time" :  trainer.metrics["epoch_time"]})
         self.logged.update({"train_loss" : trainer.metrics["train_loss"]})
@@ -79,7 +75,7 @@ class CheckpointCB(Callback):
         self.freq: int = freq
         self.only_weights: bool = only_weights
 
-    def callOnEndTrain(self, trainer, model):
+    def callOnEndEpoch(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if epoch!=0 and epoch%self.freq==0:
             name = f"{'weights' if self.only_weights else 'model'}_e{epoch}.pt"
@@ -121,7 +117,7 @@ class Render2DCB(Callback):
         if len(self.prefix)>0 and self.prefix[-1]!='_':
             self.prefix += '_'
 
-    def callOnEndTrain(self, trainer, model):
+    def callOnEndEpoch(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if self.freq>0 and epoch%self.freq==0:
             render_path = os.path.join(self.save_folder, self.prefix + f"render_{epoch}.png")
@@ -166,7 +162,7 @@ class MarchingCubeCB(Callback):
         if len(self.prefix)>0 and self.prefix[-1]!='_':
             self.prefix += '_'
     
-    def callOnEndTrain(self, trainer, model):
+    def callOnEndEpoch(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if self.freq>0 and epoch%self.freq==0:
             # try:
@@ -209,6 +205,11 @@ class ResampleCallback(Callback):
         self.on_ratio : float = on_ratio
 
     def callOnBeginTrain(self, trainer, model):
+        sampled_data = self.sampler.sample(self.n_points, on_ratio=self.on_ratio)
+        train_data = make_tensor_dataset(sampled_data, self.device)
+        trainer.set_training_data(train_data, shuffle=(self.freq>1)) # no need to shuffle if resampling happens at each epoch
+        
+    def callOnBeginEpoch(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if self.freq>0 and epoch%self.freq==0:
             sampled_data = self.sampler.sample(self.n_points, on_ratio=self.on_ratio)

@@ -104,8 +104,7 @@ class Trainer:
             batch_loss = self.forward_test_batch(test_batch, model)
             test_loss += batch_loss.item()
         self.metrics["test_loss"] = test_loss
-        for cb in self.callbacks:
-            cb.callOnEndTest(self, model)
+        for cb in self.callbacks: cb.callOnEndTest(self, model)
 
     @abstractmethod
     def forward_test_batch(self, data, model):
@@ -123,11 +122,12 @@ class Trainer:
             scheduler_cls, scheduler_args, scheduler_kwargs = self._scheduler_params
             self.scheduler = scheduler_cls(self.optimizer, *scheduler_args, **scheduler_kwargs)
 
+        for cb in self.callbacks: cb.callOnBeginTrain(self,model)
+
         for epoch in range(self.config.N_EPOCHS):
             epoch += starting_epoch
             self.metrics["epoch"] = epoch+1
-            for cb in self.callbacks:
-                cb.callOnBeginTrain(self, model)
+            for cb in self.callbacks: cb.callOnBeginEpoch(self, model)
             t0 = time.time()
             train_loss = 0. # accumulated loss function over all batches for monitoring purposes
             for data in tqdm(self.train_data_loader, total=len(self.train_data_loader)):
@@ -137,11 +137,11 @@ class Trainer:
                 train_batch_loss.backward()
                 train_loss += float(train_batch_loss.detach())
                 self.optimizer.step()
-                for cb in self.callbacks:
-                    cb.callOnEndForward(self, model)
+                for cb in self.callbacks: cb.callOnEndForward(self, model)
             self.metrics["train_loss"] = train_loss
             self.metrics["epoch_time"] = time.time() - t0
-            for cb in self.callbacks:
-                cb.callOnEndTrain(self, model)
+            for cb in self.callbacks: cb.callOnEndEpoch(self, model)
             self.step_scheduler()                
             self.evaluate_model(model)
+
+        for cb in self.callbacks: cb.callOnEndTrain(self, model)

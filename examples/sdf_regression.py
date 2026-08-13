@@ -29,7 +29,7 @@ sampling_strat = IL.sampling_strategy.CombinedStrategy([
 
 
 sampler = IL.PointSampler(geometry, sampling_strat, field)
-points, val = sampler.sample(200_000, on_ratio=0.2)
+points, val = sampler.sample(500_000, on_ratio=0.3)
 train_data = IL.data.make_tensor_dataset((points, val), DEVICE)
 
 test_pts, test_val = sampler.sample(10_000, on_ratio=0.1)
@@ -49,22 +49,23 @@ print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
 config = TrainingConfig(
-    BATCH_SIZE=100,
+    BATCH_SIZE=1000,
     TEST_BATCH_SIZE = 10000,
-    N_EPOCHS=100,
+    N_EPOCHS=1000,
     LEARNING_RATE=1e-4,
     DEVICE=DEVICE,
     OPTIMIZER="adam"
 )
 
-# trainer = IL.training.SimpleRegressionTrainer(config, lossfun=torch.nn.MSELoss())
-trainer = IL.training.RegressionEikonalTrainer(config, eikonal_weight=1e-3)
+trainer = IL.training.SimpleRegressionTrainer(config, lossfun=torch.nn.MSELoss())
+# trainer = IL.training.RegressionEikonalTrainer(config, eikonal_weight=1e-4)
 
+# trainer.add_scheduler(torch.optim.lr_scheduler.MultiStepLR, milestones=[300, 500, 700, 800, 900], gamma=0.5)
 trainer.add_callbacks(callbacks.LoggerCB(os.path.join(OUTPUT_DIR, "training_log.txt")))
 if geometry.dim == 2:
-    trainer.add_callbacks(callbacks.Render2DCB(OUTPUT_DIR, 10, plot_domain=M.geometry.AABB([-1.2, -1.2], [1.2, 1.2])))
+    trainer.add_callbacks(callbacks.Render2DCB(OUTPUT_DIR, 100, plot_domain=M.geometry.AABB([-1.2, -1.2], [1.2, 1.2])))
 elif geometry.dim == 3:
-    trainer.add_callbacks(callbacks.MarchingCubeCB(OUTPUT_DIR, 50, res=400, iso=[0., 0.1]))
+    trainer.add_callbacks(callbacks.MarchingCubeCB(OUTPUT_DIR, 100, res=400, iso=0.))
 
 trainer.set_training_data(train_data)
 trainer.set_test_data(test_data)

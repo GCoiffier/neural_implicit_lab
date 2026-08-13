@@ -4,27 +4,27 @@ title: Architectures
 
 ## Regular Architectures
 
-:::implicitlab.training.nn.mlp
+:::implicitlab.nn.mlp
     options:
         heading_level: 3
 
-:::implicitlab.training.nn.siren
+:::implicitlab.nn.siren
     options:
         heading_level: 3
 
-:::implicitlab.training.nn.phase
+:::implicitlab.nn.phase
     options:
         heading_level: 3
         
 ## Lipschitz Architectures
 
-:::implicitlab.training.nn.lipschitz
+:::implicitlab.nn.lipschitz
     options:
         heading_level: 3
 
 
 ## Utilities
 
-:::implicitlab.training.nn.utils
+:::implicitlab.nn.utils
     options:
         heading_level: 3

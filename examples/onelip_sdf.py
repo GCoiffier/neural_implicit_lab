@@ -68,7 +68,7 @@ class UpdateHkrRegulCB(callbacks.Callback):
         super().__init__()
         self.when = when
 
-    def callOnBeginTrain(self, trainer, model):
+    def callOnBeginEpoch(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if epoch in self.when:
             trainer.lossfun.lmbd = self.when[epoch]

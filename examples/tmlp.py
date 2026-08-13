@@ -86,22 +86,22 @@ lod_weights[-1] = 5.
 
 trainer = TMLPTrainer(lod_weights,
     TrainingConfig(
-        BATCH_SIZE=100,
-        TEST_BATCH_SIZE = 5000,
+        BATCH_SIZE=10000,
+        TEST_BATCH_SIZE = 10000,
         N_EPOCHS=args.ne,
-        LEARNING_RATE=4e-4,
+        LEARNING_RATE=1e-3,
         OPTIMIZER="adam",
         DEVICE=DEVICE
 ))
 trainer.set_training_data(TensorDataset(torch.zeros((1,1), device=DEVICE))) # dummy data to be erased by the resampling callback
 trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
-trainer.add_callbacks(callbacks.ResampleCallback(sampler, args.n_points, device=DEVICE, on_ratio=0.4))
+trainer.add_callbacks(callbacks.ResampleCallback(sampler, args.n_points, device=DEVICE, freq=50, on_ratio=0.4))
 if geometry.dim == 2:
     trainer.add_callbacks(callbacks.Render2DCB("output", 10))
 elif geometry.dim == 3:
-    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 10, res=200, iso=0.))
+    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 100, res=200, iso=0.))
 
-trainer.add_scheduler(torch.optim.lr_scheduler.MultiStepLR, milestones=[10, 50, 80], gamma=0.25)
+trainer.add_scheduler(torch.optim.lr_scheduler.MultiStepLR, milestones=[int(args.ne*0.3), int(args.ne*0.5), int(args.ne*0.7), int(args.ne*0.8), int(args.ne*0.9)], gamma=0.25)
 trainer.train(model)
 
 

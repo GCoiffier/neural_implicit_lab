@@ -111,7 +111,7 @@ class KappaUpdateCallback(callbacks.Callback):
         self.tm = tm
         self.n = n_epochs
 
-    def callOnEndTrain(self, trainer, model):
+    def callOnEndEpoch(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         t = epoch/self.n
         if t<self.tm:

@@ -62,7 +62,7 @@ else:
 
 # Setup trainer
 trainer = ImplicitSurfaceTrainer(TrainingConfig(
-    BATCH_SIZE=1000,
+    BATCH_SIZE=10000,
     TEST_BATCH_SIZE = 5000,
     N_EPOCHS=args.ne,
     LEARNING_RATE=1e-4,
@@ -74,7 +74,7 @@ trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
 if geometry.dim == 2:
     trainer.add_callbacks(callbacks.Render2DCB("output", 10))
 elif geometry.dim == 3:
-    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 50, res=400, iso=[0., 0.1]))
+    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 100, res=400, iso=0.))
 trainer.set_training_data(train_data)
 trainer.train(model)
 
