@@ -46,15 +46,17 @@ class Trainer:
         self.callbacks = []
         self.metrics = dict()
 
-    def set_training_data(self, data: TensorDataset, shuffle: bool = True):
+    def set_training_data(self, data: TensorDataset, shuffle: bool = True, num_workers=-1):
         if not isinstance(data, TensorDataset):
             raise Exception("Please provide a torch.utils.data.TensorDataset object to this function")
-        self.train_data_loader = DataLoader(data, batch_size=self.config.BATCH_SIZE, shuffle=shuffle)
+        num_workers = num_workers if num_workers!= -1 else torch.get_num_threads()
+        self.train_data_loader = DataLoader(data, batch_size=self.config.BATCH_SIZE, shuffle=shuffle, num_workers=num_workers)
 
-    def set_test_data(self, data: TensorDataset):
+    def set_test_data(self, data: TensorDataset, num_workers=-1):
         if not isinstance(data, TensorDataset):
             raise Exception("Please provide a torch.utils.data.TensorDataset object to this function")
-        self.test_data_loader = DataLoader(data, batch_size=self.config.TEST_BATCH_SIZE)
+        num_workers = num_workers if num_workers!= -1 else torch.get_num_threads()
+        self.test_data_loader = DataLoader(data, batch_size=self.config.TEST_BATCH_SIZE, num_workers=num_workers)
 
     def get_optimizer(self, model):
         match self.config.OPTIMIZER.lower():
@@ -133,6 +135,7 @@ class Trainer:
             for data in tqdm(self.train_data_loader, total=len(self.train_data_loader)):
                 self.optimizer.zero_grad() # zero the parameter gradients
                 # forward + backward + optimize
+                data = [_d.to(self.config.DEVICE) for _d in data]
                 train_batch_loss = self.forward_train_batch(data, model)
                 train_batch_loss.backward()
                 train_loss += float(train_batch_loss.detach())

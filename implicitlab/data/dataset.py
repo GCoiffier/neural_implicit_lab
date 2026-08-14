@@ -2,12 +2,11 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 
-def make_tensor_dataset(data:list, device:str) -> TensorDataset:
+def make_tensor_dataset(data:list) -> TensorDataset:
     """Aggregates a list of numpy arrays into a pytorch TensorDataset object for training
 
     Args:
         data (list): list of numpy.array object
-        device (str): the device onto which the dataset is loaded. Common choices are 'cpu' for cpu training and "cuda" for GPU training
 
     Returns:
         TensorDataset: the formatted dataset
@@ -16,7 +15,7 @@ def make_tensor_dataset(data:list, device:str) -> TensorDataset:
     for tensor in data:
         if len(tensor.shape)==1:
             tensor = tensor.reshape((-1,1))
-        tensors.append(torch.Tensor(tensor).to(device))
+        tensors.append(torch.Tensor(tensor))
     return TensorDataset(*tensors)
 
 
