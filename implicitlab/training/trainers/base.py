@@ -4,7 +4,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 from ..losses import *
 from ..callbacks import Callback
-from ..optimizers.muon import SingleDeviceMuonWithAuxAdam
+from ..optimizers import SingleDeviceMuonWithAuxAdam, AdaBound, AdaBoundW
 
 import time
 from dataclasses import dataclass
@@ -20,6 +20,7 @@ class TrainingConfig:
     LEARNING_RATE : float = 1e-3
     DEVICE : str = "cpu"
     OPTIMIZER : str = "Adam"
+    NUM_DATALOADER_WORKERS: int = -1
 
 
 class Trainer:
@@ -46,16 +47,18 @@ class Trainer:
         self.callbacks = []
         self.metrics = dict()
 
-    def set_training_data(self, data: TensorDataset, shuffle: bool = True, num_workers=-1):
+    def set_training_data(self, data: TensorDataset, shuffle: bool = True):
         if not isinstance(data, TensorDataset):
             raise Exception("Please provide a torch.utils.data.TensorDataset object to this function")
-        num_workers = num_workers if num_workers!= -1 else torch.get_num_threads()
+        num_workers = self.config.NUM_DATALOADER_WORKERS 
+        if num_workers == -1: num_workers = torch.get_num_threads()
         self.train_data_loader = DataLoader(data, batch_size=self.config.BATCH_SIZE, shuffle=shuffle, num_workers=num_workers)
 
-    def set_test_data(self, data: TensorDataset, num_workers=-1):
+    def set_test_data(self, data: TensorDataset):
         if not isinstance(data, TensorDataset):
             raise Exception("Please provide a torch.utils.data.TensorDataset object to this function")
-        num_workers = num_workers if num_workers!= -1 else torch.get_num_threads()
+        num_workers = self.config.NUM_DATALOADER_WORKERS 
+        if num_workers == -1: num_workers = torch.get_num_threads()
         self.test_data_loader = DataLoader(data, batch_size=self.config.TEST_BATCH_SIZE, num_workers=num_workers)
 
     def get_optimizer(self, model):
@@ -72,8 +75,10 @@ class Trainer:
                         lr=5e-4, betas=(0.9, 0.95), weight_decay=0.01),
                 ]
                 return SingleDeviceMuonWithAuxAdam(param_groups)
+            case "adabound":
+                return AdaBound(model.parameters(), lr=self.config.LEARNING_RATE, final_lr=self.config.LEARNING_RATE)
             case "adam":
-                return torch.optim.Adam(model.parameters(), lr=self.config.LEARNING_RATE) 
+                return torch.optim.Adam(model.parameters(), lr=self.config.LEARNING_RATE)
             case _:
                 # Adam by default
                 return torch.optim.Adam(model.parameters(), lr=self.config.LEARNING_RATE) 
@@ -103,6 +108,7 @@ class Trainer:
         if self.test_data_loader is None: return
         test_loss = 0.
         for test_batch in self.test_data_loader:
+            test_batch = [_d.to(self.config.DEVICE) for _d in test_batch]
             batch_loss = self.forward_test_batch(test_batch, model)
             test_loss += batch_loss.item()
         self.metrics["test_loss"] = test_loss

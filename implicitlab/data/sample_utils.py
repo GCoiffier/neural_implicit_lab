@@ -11,15 +11,19 @@ def sample_points_and_normals2D(polyline, n_pts):
         edges = np.random.choice(len(polyline.edges), size=n_pts, p=lengths)
     sampled_normals = np.zeros((n_pts,2))
     for i,e in enumerate(edges):
-        pA,pB = (polyline.vertices[_v] for _v in polyline.edges[e])
+        A,B = polyline.edges[e]
+        pA,pB = polyline.vertices[A], polyline.vertices[B]
         ni = M.Vec.normalized(pB - pA)
+        if B==len(polyline.vertices)-1:
+            # the last edge given in order is (n-1, 0) which has been swapped due to mouette convention to (0,n-1), meaning that it is inverted
+            ni *= -1
         sampled_normals[i,:] = np.array([-ni.y, ni.x])
         t = np.random.random()
         pt = t*pA + (1-t)*pB
         sampled_pts[i,:] = pt[:2]
 
     # check normal orientation
-    n_view_pts = 11
+    n_view_pts = 21
     view_pts = [10*M.Vec(np.cos(2*np.pi*a), np.sin(2*np.pi*a)) for a in np.random.rand(n_view_pts)]
     sign_count = 0
     for i in range(n_view_pts):

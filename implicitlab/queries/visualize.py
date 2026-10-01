@@ -192,7 +192,7 @@ def reconstruct_surface_marching_cubes(
     iso : int = 0, 
     res : int = 100, 
     batch_size : int = 5000,
-    use_tqdm : bool = False
+    **kwargs
 ) -> dict:
     """Extracts isosurfaces of a given neural implicit by using the Marching Cube algorithm.
 
@@ -203,7 +203,10 @@ def reconstruct_surface_marching_cubes(
         iso (int, optional): value of the isosurface. Several values can be provided in a list. If that is the case, one mesh per isovalue will be produced. Defaults to 0.
         res (int, optional): resolution of the marching cubes grid. Defaults to 100.
         batch_size (int, optional): batch size for forward computation. Defaults to 5000.
+
+    Additionnal Args:
         use_tqdm (bool, optional): whether to display a progress bar during computation. Defaults to False.
+        num_workers (int, optional): number of workers for the dataloader to feed to the GPU. Defaults to -1 (number of cpu cores).
 
     Returns:
         dict: returns a dictionnary of ((i,iso), mesh) where i is a unique identifier, iso is the value of the isovalue and mesh is the output surface mesh (mouette.mesh.SurfaceMesh type).
@@ -217,7 +220,9 @@ def reconstruct_surface_marching_cubes(
     ### Feed grid to model
     L = [np.linspace(domain.mini[i], domain.maxi[i], res) for i in range(3)]
     pts = np.hstack((np.meshgrid(*L))).swapaxes(0,1).reshape(3,-1).T
-    dist_values = forward_in_batches(model, pts, device, compute_grad=False, batch_size=batch_size, use_tqdm=use_tqdm)
+    dist_values = forward_in_batches(model, pts, device, 
+        compute_grad=False, batch_size=batch_size, 
+        use_tqdm=kwargs.get("use_tqdm",False), num_workers=kwargs.get("num_workers", -1))
     print("Implicit values:", np.amin(dist_values), np.amax(dist_values))
     dist_values = dist_values.reshape((res,res,res))
 

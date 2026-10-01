@@ -1,6 +1,7 @@
 import os, sys
 import mouette as M
 import torch
+from torch import nn
 import argparse
 import numpy as np
 
@@ -35,7 +36,7 @@ if geometry.dim == 3:
     points, normals = M.sampling.sample_surface(geometry, args.n_points, return_normals=True)
 elif geometry.dim == 2:
     points, normals = IL.data.sample_points_and_normals2D(geometry, 100_000)
-train_data = IL.data.make_tensor_dataset((points, normals), DEVICE)
+train_data = IL.data.make_tensor_dataset((points, normals))
 
 pc = M.mesh.from_arrays(points)
 M.mesh.save(pc, "output/train_pts.geogram_ascii")
@@ -44,6 +45,7 @@ M.mesh.save(pc, "output/train_pts.geogram_ascii")
 
 # Setup model
 model = IL.nn.SirenNet(geometry.dim, args.layer_size, args.n_layers).to(DEVICE)
+# model = IL.nn.QuadraticSkipSirenNet(geometry.dim, args.layer_size, args.n_layers).to(DEVICE)
 
 # model = torch.nn.Sequential(
 #     # IL.nn.encodings.HalfPlaneEncoding(geometry, 1000),
@@ -52,6 +54,9 @@ model = IL.nn.SirenNet(geometry.dim, args.layer_size, args.n_layers).to(DEVICE)
 #     # IL.nn.encodings.GaussianEncoding(geometry, 1000),
 #     IL.nn.MultiLayerPerceptron(1000, 256, 10)
 # ).to(DEVICE)
+
+# model = IL.nn.QuaNet(geometry.dim, dim_hidden=64, n_layers=5, activation=IL.nn.siren.SinusActivation, residual=True).to(DEVICE)
+
 
 print(f"{IL.nn.count_parameters(model)} parameters")
 
@@ -62,19 +67,19 @@ else:
 
 # Setup trainer
 trainer = ImplicitSurfaceTrainer(TrainingConfig(
-    BATCH_SIZE=10000,
-    TEST_BATCH_SIZE = 5000,
+    BATCH_SIZE=10_000,
+    TEST_BATCH_SIZE = 50_000,
     N_EPOCHS=args.ne,
-    LEARNING_RATE=1e-4,
+    LEARNING_RATE=1e-3,
     OPTIMIZER="Adam",
     DEVICE=DEVICE
 ))
 
 trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
 if geometry.dim == 2:
-    trainer.add_callbacks(callbacks.Render2DCB("output", 10))
+    trainer.add_callbacks(callbacks.Render2DCB("output", 50))
 elif geometry.dim == 3:
-    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 100, res=400, iso=0.))
+    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 50, res=400, iso=0.))
 trainer.set_training_data(train_data)
 trainer.train(model)
 

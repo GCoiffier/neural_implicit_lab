@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from ..utils import gradient
+from ..diff_op import *
 
 class HKRLoss:
     def __init__(self, margin: float = 1e-2, lmbd: float = 10.):
@@ -27,46 +27,47 @@ class HKRLoss:
             y (torch.Tensor): vector of predicted values
         """
         return  F.relu(self.margin - y) + (1./self.lmbd) * torch.mean(-y)
-    
-class VectorAlignmentLoss:
-    """Cosine similarity loss between two vectors."""
-    def __init__(self): pass
-
-    def __call__(self, y, target):
-        """
-        Args:
-            y (torch.Tensor): input tensor
-            target (torch.Tensor): target tensor
-
-        Returns:
-            torch.Tensor: Cosine similarity
-        """
-        return (1-F.cosine_similarity(y, target, dim = 1)*2).mean()
 
 
-class EikonalLoss:
+
+def VectorAlignmentLoss(y, target):
+    """Cosine similarity loss between two vectors.
+
+    Args:
+        y (torch.Tensor): input tensor
+        target (torch.Tensor): target tensor
+
+    Returns:
+        torch.Tensor: Cosine similarity
+    """
+    return (1-F.cosine_similarity(y, target, dim = 1)*2).mean()
+
+
+def EikonalLoss(X, Y, grad=None):
     """
     The Eikonal loss regularizes the gradient of a neural implicit to have unit norm everywhere:
 
     $$\\mathcal{L}_{\\text{eik}}(x) = (||\\nabla f_\\theta(x)|| -1)^2$$
     
     The gradient is computed from the input $X$ and the output $Y$ of the neural model.
+
+    Args:
+        X (torch.Tensor): input batch of the model
+        Y (torch.Tensor): output of the model.
+
+    Returns:
+        torch.Tensor: Eikonal loss
     """
-    def __init__(self): pass
+    if grad is None:
+        grad = torch.autograd.grad(Y, X, grad_outputs=torch.ones_like(Y), create_graph=True)[0]
+    grad_norm = grad.norm(dim=-1)
+    return F.mse_loss(grad_norm, torch.ones_like(grad_norm))
 
-    def __call__(self, X, Y):
-        """
-        Args:
-            X (torch.Tensor): input batch of the model
-            Y (torch.Tensor): output of the model.
 
-        Returns:
-            torch.Tensor: Eikonal loss
-        """
-        batch_grad = torch.autograd.grad(Y, X, grad_outputs=torch.ones_like(Y), create_graph=True)[0]
-        batch_grad_norm = batch_grad.norm(dim=-1)
-        return F.mse_loss(batch_grad_norm, torch.ones_like(batch_grad_norm))
-
+def DirichletLoss(X,Y, grad=None):
+    if grad is None:
+        grad = torch.autograd.grad(Y, X, grad_outputs=torch.ones_like(Y), create_graph=True)[0]
+    return torch.mean(torch.sum(grad**2, dim=-1))
 
 class SALLoss:
     def __init__(self, l=1., metric="l2"):
@@ -131,44 +132,12 @@ class HotspotLoss:
     def __init__(self, lmbd:float ):
         self.lmbd = lmbd  
 
-    def __call__(self, X, Y):
-        batch_grad = torch.autograd.grad(Y, X, grad_outputs=torch.ones_like(Y), create_graph=True)[0]
-        batch_grad_norm = batch_grad.norm(dim=-1)
-        return torch.mean(torch.exp(-2*self.lmbd*torch.abs(Y))*(1 + batch_grad_norm**2))
+    def __call__(self, X, Y, grad=None):
+        if grad is None:
+            grad = torch.autograd.grad(Y, X, grad_outputs=torch.ones_like(Y), create_graph=True)[0]
+        grad_norm = grad.norm(dim=-1)
+        return torch.mean(torch.exp(-2*self.lmbd*torch.abs(Y))*(1 + grad_norm**2))
     
-
-class SingularHessianLoss:
-    """
-    TODO
-    """
-    pass
-
-    # def singular_hessian_loss(mnfld_points, nonmnfld_points, mnfld_grad, nonmnfld_grad):
-    #     nonmnfld_dx = utils.gradient(nonmnfld_points, nonmnfld_grad[:, :, 0])
-    #     nonmnfld_dy = utils.gradient(nonmnfld_points, nonmnfld_grad[:, :, 1])
-    #     mnfld_dx = utils.gradient(mnfld_points, mnfld_grad[:, :, 0])
-    #     mnfld_dy = utils.gradient(mnfld_points, mnfld_grad[:, :, 1])
-
-    #     # if dims == 3:
-    #     nonmnfld_dz = utils.gradient(nonmnfld_points, nonmnfld_grad[:, :, 2])
-    #     nonmnfld_hessian_term = torch.stack((nonmnfld_dx, nonmnfld_dy, nonmnfld_dz), dim=-1)
-
-    #     mnfld_dz = utils.gradient(mnfld_points, mnfld_grad[:, :, 2])
-    #     mnfld_hessian_term = torch.stack((mnfld_dx, mnfld_dy, mnfld_dz), dim=-1)
-
-    #     nonmnfld_det = torch.det(nonmnfld_hessian_term)
-    #     mnfld_det = torch.det(mnfld_hessian_term)
-
-    #     morse_mnfld = torch.tensor([0.0], device=mnfld_points.device)
-    #     morse_nonmnfld = torch.tensor([0.0], device=mnfld_points.device)
-    #     # if div_type == 'l1':
-    #     morse_nonmnfld = nonmnfld_det.abs().mean()
-    #     morse_mnfld = mnfld_det.abs().mean()
-
-    #     morse_loss = 0.5 * (morse_nonmnfld + morse_mnfld)
-
-    #     return morse_loss    
-
 
 
 class ThinPlateLoss:

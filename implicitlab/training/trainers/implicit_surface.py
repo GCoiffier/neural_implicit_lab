@@ -17,10 +17,10 @@ class ImplicitSurfaceTrainer(Trainer):
         super().__init__(config)
         self.rho = 100.
         self.weights = {
-            "eikonal" : 50.,
-            "on" : 7000.,
-            "out" : 600.,
-            "normals": 100.,
+            "eikonal" : 5.,
+            "on" : 700.,
+            "out" : 60.,
+            "normals": 10.,
         }
     
     def forward_test_batch(self, data, model): pass
@@ -31,13 +31,12 @@ class ImplicitSurfaceTrainer(Trainer):
         Y_on = model(pts)
         batch_loss = self.weights["on"] * torch.mean(torch.abs(Y_on))
 
+        grad_on = torch.autograd.grad(Y_on, pts, grad_outputs=torch.ones_like(Y_on), create_graph=True)[0]
+        batch_loss += self.weights["normals"]*torch.nn.functional.mse_loss(grad_on, normals)
+
         pts_out = 3*torch.rand_like(pts)-1.5
         pts_out.requires_grad = True
         Y_out = model(pts_out)
         batch_loss += self.weights["out"] * torch.mean(torch.exp(- self.rho * torch.abs(Y_out)))
-
-        grad = torch.autograd.grad(Y_on, pts, grad_outputs=torch.ones_like(Y_on), create_graph=True)[0]
-        batch_loss += self.weights["normals"]*torch.nn.functional.mse_loss(grad, normals)
-        
-        batch_loss += self.weights["eikonal"] * EikonalLoss()(pts_out, Y_out)        
+        batch_loss += self.weights["eikonal"] * EikonalLoss(pts_out, Y_out)        
         return batch_loss

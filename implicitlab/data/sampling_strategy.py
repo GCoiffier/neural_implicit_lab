@@ -39,8 +39,10 @@ class CombinedStrategy(SamplingStrategy):
 
     def sample(self, n_pts: int):
         sampled = []
+        n_to_sample = [int(n_pts*self.w[i]) for i in range(len(self.strats))]
+        n_to_sample[0] += n_pts - sum(n_to_sample) # rounding issues may give a wrong number of samples : correct by adding points to the first stragegy
         for i,strat in enumerate(self.strats):
-            sampled.append(strat.sample(int(n_pts*self.w[i])))
+            sampled.append(strat.sample(n_to_sample[i]))
         sampled = np.concatenate(sampled)
         if self.shuffle: np.random.shuffle(sampled)
         return sampled

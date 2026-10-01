@@ -7,16 +7,35 @@ from .base import FieldGenerator
 class Constant(FieldGenerator):
     
     def __init__(self, value:float):
-        """_summary_
+        """Constant field generator
 
         Args:
-            value (float): _description_
+            value (float): which value to output at every position in space
         """
         super().__init__()
         self.val = value
 
     def compute(self, query : np.ndarray) -> np.ndarray:
         return np.full(query.shape[0], self.val)
+
+
+class ListField(FieldGenerator):
+    
+    def __init__(self, *args):
+        """List of field generators. Used to combine different fields.
+
+        Args:
+            *args: all the fields to be combined.
+        """
+        super().__init__()
+        self.fields = args
+
+    def compute(self, query: np.ndarray) -> np.ndarray:
+        return tuple(field.compute(query) for field in self.fields)
+
+    def compute_on(self, query: np.ndarray) -> np.ndarray:
+        return tuple(field.compute_on(query) for field in self.fields)
+
 
 
 class CustomFunction(FieldGenerator):

@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import DataLoader
 import numpy as np
 from tqdm import tqdm
-import multiprocessing
 
 def get_device(force_cpu:bool = False) -> torch.device:
     """Utility function for selecting the correct pytorch device. Returns the first gpu device found on the current system if it exists and "cpu" otherwise.
@@ -72,23 +71,3 @@ def forward_in_batches(
             v_batch = model(batch.to(device))
             outputs.append(v_batch.detach().cpu())
         return torch.cat(outputs).numpy()
-
-
-def gradient(inp_tensor: torch.Tensor, out_tensor: torch.Tensor) -> torch.Tensor:
-    """Computes the gradient of the output tensor with respect to the input tensor using pytorch's autograd.
-
-    Args:
-        inp_tensor (torch.Tensor): input tensor
-        out_tensor (torch.Tensor): output tensor
-
-    Returns:
-        torch.Tensor: the gradient
-    """
-    assert inp_tensor.requires_grad
-    grad_outputs = torch.ones_like(out_tensor, device=inp_tensor.device)
-    grad = torch.autograd.grad(out_tensor, inp_tensor, 
-        grad_outputs=grad_outputs, 
-        create_graph=True,
-        retain_graph=True,
-        only_inputs=True)[0]
-    return grad

@@ -30,10 +30,10 @@ sampling_strat = IL.sampling_strategy.CombinedStrategy([
 
 sampler = IL.PointSampler(geometry, sampling_strat, field)
 points, val = sampler.sample(500_000, on_ratio=0.3)
-train_data = IL.data.make_tensor_dataset((points, val), DEVICE)
+train_data = IL.data.make_tensor_dataset((points, val))
 
 test_pts, test_val = sampler.sample(10_000, on_ratio=0.1)
-test_data = IL.data.make_tensor_dataset((test_pts, test_val), DEVICE)
+test_data = IL.data.make_tensor_dataset((test_pts, test_val))
 
 pc = M.mesh.from_arrays(points)
 pc.vertices.register_array_as_attribute("val", val)
@@ -45,14 +45,15 @@ M.mesh.save(pc, os.path.join(OUTPUT_DIR, "train_pts.geogram_ascii"))
 # model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 10).to(DEVICE)
 # model = IL.nn.DenseLipSDP(geometry.dim, 128, 6).to(DEVICE)
 model = IL.nn.SirenNet(geometry.dim, 128, 6).to(DEVICE)
+# model = IL.nn.QuaNet(geometry.dim, dim_hidden=64, n_layers=4, activation=IL.nn.siren.SinusActivation).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
 config = TrainingConfig(
-    BATCH_SIZE=1000,
+    BATCH_SIZE=10_000,
     TEST_BATCH_SIZE = 10000,
-    N_EPOCHS=1000,
-    LEARNING_RATE=1e-4,
+    N_EPOCHS=500,
+    LEARNING_RATE=3e-4,
     DEVICE=DEVICE,
     OPTIMIZER="adam"
 )

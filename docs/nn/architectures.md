@@ -12,10 +12,14 @@ title: Architectures
     options:
         heading_level: 3
 
-:::implicitlab.nn.phase
+<!-- :::implicitlab.nn.phase
+    options:
+        heading_level: 3 -->
+
+:::implicitlab.nn.quanet
     options:
         heading_level: 3
-        
+
 ## Lipschitz Architectures
 
 :::implicitlab.nn.lipschitz

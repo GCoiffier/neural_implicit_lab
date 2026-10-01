@@ -174,7 +174,8 @@ class MarchingCubeCB(Callback):
                 self.iso, 
                 self.res, 
                 trainer.config.TEST_BATCH_SIZE,
-                use_tqdm=True)
+                use_tqdm=True,
+                num_workers=trainer.config.NUM_DATALOADER_WORKERS)
             for (n,off),mesh in iso_surfaces.items():
                 M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_iso{round(1000*off)}.obj"))
                 # M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_n{n:02d}_iso{round(1000*off)}.obj"))
@@ -182,11 +183,26 @@ class MarchingCubeCB(Callback):
             #     print("[ERROR] Marching Cube Callback:", e)
             #     pass
 
+    def callOnEndTrain(self, trainer, model):
+        epoch = trainer.metrics["epoch"]
+        if self.freq>0 and epoch%self.freq==0: return # already been calculated for this epoch
+        print(f"Running marching cube with resolution {self.res}^3")
+        iso_surfaces = reconstruct_surface_marching_cubes(
+            model, 
+            self.domain, 
+            trainer.config.DEVICE, 
+            self.iso, 
+            self.res, 
+            trainer.config.TEST_BATCH_SIZE,
+            use_tqdm=True)
+        for (n,off),mesh in iso_surfaces.items():
+            M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"final_iso{round(1000*off)}.obj"))
+
 
 
 class ResampleCallback(Callback):
 
-    def __init__(self, sampler : PointSampler, n_points: int, device: str, freq: int = 1, on_ratio:float = 0.01):
+    def __init__(self, sampler : PointSampler, n_points: int, freq: int = 1, on_ratio:float = 0.01):
         """
         A callback that regenerates the training dataset at a specifiec frequency
         
@@ -198,20 +214,23 @@ class ResampleCallback(Callback):
             on_ratio (float, optional): proportion of points to sample on the geometry. See the PointSampler class for details. Defaults to 0.01.
         """
         super().__init__()
-        self.device : str = device
         self.freq = freq
         self.sampler : PointSampler = sampler
         self.n_points : int = n_points
         self.on_ratio : float = on_ratio
 
-    def callOnBeginTrain(self, trainer, model):
-        sampled_data = self.sampler.sample(self.n_points, on_ratio=self.on_ratio)
-        train_data = make_tensor_dataset(sampled_data, self.device)
+    def run_sample(self,trainer):
+        points, fields = self.sampler.sample(self.n_points, on_ratio=self.on_ratio)
+        if isinstance(fields, tuple):
+            train_data = make_tensor_dataset([points, *fields])
+        else:
+            train_data = make_tensor_dataset([points, fields])
         trainer.set_training_data(train_data, shuffle=(self.freq>1)) # no need to shuffle if resampling happens at each epoch
+
+    def callOnBeginTrain(self, trainer, model):
+        self.run_sample(trainer)
         
     def callOnBeginEpoch(self, trainer, model):
         epoch = trainer.metrics["epoch"]
         if self.freq>0 and epoch%self.freq==0:
-            sampled_data = self.sampler.sample(self.n_points, on_ratio=self.on_ratio)
-            train_data = make_tensor_dataset(sampled_data, self.device)
-            trainer.set_training_data(train_data, shuffle=(self.freq>1)) # no need to shuffle if resampling happens at each epoch
+            self.run_sample(trainer)

@@ -4,5 +4,7 @@ from .data import fields
 from .data import sampling_strategy
 
 from . import nn
-from .queries import queries, visualize
+from . import training
 from . import utils
+from . import diff_op
+from .queries import queries, visualize
