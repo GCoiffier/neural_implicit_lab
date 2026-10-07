@@ -87,7 +87,7 @@ class CheckpointCB(Callback):
 
 class Render2DCB(Callback):
 
-    def __init__(self, save_folder: str, freq: int, plot_domain: M.geometry.AABB = None, resolution: int = 800, output_contours: bool = True, output_gradient_norm: bool = True, prefix: str = ""):
+    def __init__(self, save_folder: str, freq: int, plot_domain: M.geometry.AABB = None, resolution: int = 800, output_contours: bool = True, output_gradient_norm: bool = True, **kwargs):
         """A Callback that makes a snapshot of a 2D neural implicit by sampling its values on a grid. Can also sample the gradient's norm and make a contour plot.
 
         Args:
@@ -97,7 +97,10 @@ class Render2DCB(Callback):
             resolution (int, optional): Resolution of the snapshot grid. resolution^2 samples will be computed from the neural implicit model. Defaults to 800.
             output_contours (bool, optional): Whether to output a contour plot of the neural field. Defaults to True.
             output_gradient_norm (bool, optional): Whether to also output a plot of the norm of the neural field's gradient. Defaults to True.
+        
+        Additionnal arguments
             prefix (str, optional): prefix for the name of the saved file. The name will have the form <prefix>_e<n_epoch>_iso<iso_value>. Defaults to the empty string.
+            n_contours (int, optional): Defaults to 16.    
 
         Warning:
             Fails if the neural implicit currently training is not 2-dimensionnal.
@@ -113,7 +116,8 @@ class Render2DCB(Callback):
         self.res = resolution
         self.output_contours = output_contours
         self.output_gradient_norm = output_gradient_norm
-        self.prefix = prefix
+        self.prefix = kwargs.get("prefix", "")
+        self.n_contours = kwargs.get("n_contours", 16)
         if len(self.prefix)>0 and self.prefix[-1]!='_':
             self.prefix += '_'
 
@@ -132,6 +136,7 @@ class Render2DCB(Callback):
                 trainer.config.DEVICE, 
                 res=self.res, 
                 batch_size=trainer.config.TEST_BATCH_SIZE,
+                n_contours = self.n_contours
             )
 
 class MarchingCubeCB(Callback):

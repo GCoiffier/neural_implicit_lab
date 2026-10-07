@@ -63,6 +63,8 @@ class Trainer:
 
     def get_optimizer(self, model):
         match self.config.OPTIMIZER.lower():
+            case "custom":
+                return
             case "sgd":
                 return torch.optim.SGD(model.parameters(), lr=self.config.LEARNING_RATE, momentum=0.9)
             case "muon":
@@ -125,7 +127,12 @@ class Trainer:
     def train(self, model, starting_epoch=0):
         if self.train_data_loader is None:
             raise Exception("No training data was provided. Call the `set_training_data` before training.")
-        self.optimizer = self.get_optimizer(model)
+        
+        if self.config.OPTIMIZER.lower()=="custom": 
+            if self.optimizer is None:
+                raise Exception("Training configuration has OPTIMIZER type set to 'custom', but no optimizer was provided to the trainer.")
+        else:
+            self.optimizer = self.get_optimizer(model)
         if self._has_scheduler:
             scheduler_cls, scheduler_args, scheduler_kwargs = self._scheduler_params
             self.scheduler = scheduler_cls(self.optimizer, *scheduler_args, **scheduler_kwargs)

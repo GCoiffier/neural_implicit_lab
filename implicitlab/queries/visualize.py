@@ -21,7 +21,7 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain: M.geo
         res (int, optional): Image resolution. Defaults to 800.
         batch_size (int, optional): Size of forward batches. Defaults to 1000.
 
-    Additionnal Args:
+    Additional Args:
         n_contours (int, optional): Defaults to 16.    
     """
     assert domain.dim == 2
