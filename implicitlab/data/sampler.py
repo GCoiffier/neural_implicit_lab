@@ -1,16 +1,16 @@
 import mouette as M
-from .sampling_strategy import *
-from .fields.base import FieldGenerator, EmptyFieldGenerator
+from .sampling_strategies import *
+from .fields.base import FieldGenerator
 
 class PointSampler:
 
     def __init__(self, geom_object: M.mesh.Mesh, sampling_strategy: SamplingStrategy, *field_generators : list[FieldGenerator]):
-        """_summary_
+        """The PointSampler class is responsible for generating a dataset of points to be fed to a neural implicit representation during training.
 
         Args:
-            geom_object (M.mesh.Mesh): _description_
-            sampling_strategy (SamplingStrategy): _description_
-            field_generator (FieldGenerator, optional): _description_. Defaults to None.
+            geom_object (M.mesh.Mesh): the input geometrical object around which points are sampled.
+            sampling_strategy (SamplingStrategy): the strategy to be used for sampling points (see Sampling Strategies)
+            *field_generators (FieldGenerator, optional): the data to be computed at each sampled points (see Implicit Fields). Several fields can be provided for several signals to be computed. Defaults to None (no field will be generated).
         """
         self.geom_object = geom_object
         self.sampler : SamplingStrategy = sampling_strategy
@@ -23,7 +23,7 @@ class PointSampler:
         n_points: int,
         on_ratio: float = 0.01,
     ):
-        """Sample a given number of points according to the provided sampling strategy.
+        """Samples a given number of points according to the provided sampling strategy.
 
         Args:
             n_points (int): number of points to sample.
@@ -61,64 +61,7 @@ class PointSampler:
     
 
     def sample_geometry(self, n_points: int) -> np.ndarray:
-        """Sample a given number of points _on_ the geometrical object provided.
-
-        Args:
-            n_points (int): number of points to sample
-
-        Returns:
-            np.ndarray: array of sampled points
-        """
-        match type(self.geom_object):
-            case M.mesh.PointCloud:
-                if n_points < len(self.geom_object.vertices):
-                    which = np.random.choice(len(self.geom_object.vertices), n_points, replace=False)
-                    pts_on = np.array([self.geom_object.vertices[v] for v in which])
-                else:
-                    pts_on = np.asarray(self.geom_object.vertices)
-
-            case M.mesh.PolyLine:
-                pts_on = M.sampling.sample_polyline(self.geom_object, n_points)
-
-            case M.mesh.SurfaceMesh:
-                pts_on = M.sampling.sample_surface(self.geom_object, n_points)
-        
-        if self.geom_object.dim==2:
-            pts_on = pts_on[:,:2]
-        
-        return pts_on
-    
-
-
-
-class OnGeometryPointSampler:
-
-    def __init__(self, geom_object : M.mesh.Mesh, field_generator = None):
-        """A sampler that only samples points uniformly from the geometry, thus it does not need a sampling strategy.
-
-        Args:
-            geom_object (M.mesh.Mesh): the input geometry object.
-            field_generator (FieldGenerator, optional): which field to compute at each points. Defaults to None.
-        """
-        self.geom_object = geom_object
-        self.field_generator = field_generator if field_generator is not None else EmptyFieldGenerator()
-        
-        self.points : np.ndarray = None
-        self.field : np.ndarray = None
-    
-    def sample_geometry(self, n_points: int) -> np.ndarray:
-        """Alias for OnGeometryPointSampler.sample
-
-        Args:
-            n_points (int): _description_
-
-        Returns:
-            np.ndarray: _description_
-        """
-        return self.sample(n_points)
-    
-    def sample(self, n_points: int) -> np.ndarray:
-        """Sample a given number of points _on_ the geometrical object provided.
+        """Samples a given number of points _on_ the geometrical object provided.
 
         Args:
             n_points (int): number of points to sample
@@ -143,7 +86,7 @@ class OnGeometryPointSampler:
         if self.geom_object.dim==2:
             self.points = self.points[:,:2]
         
-        self.field = self.field_generator.compute_on(self.points)
-        if self.field is None:
+        self.fields = tuple(field.compute_on(self.points) for field in self.field_generators)
+        if not self.fields:
             return self.points       
-        return self.points, self.field
+        return self.points, self.fields

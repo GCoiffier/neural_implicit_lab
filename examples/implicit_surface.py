@@ -1,7 +1,6 @@
 import os, sys
 import mouette as M
 import torch
-from torch import nn
 import argparse
 import numpy as np
 
@@ -45,8 +44,6 @@ M.mesh.save(pc, "output/train_pts.geogram_ascii")
 
 # Setup model
 model = IL.nn.SirenNet(geometry.dim, args.layer_size, args.n_layers).to(DEVICE)
-# model = IL.nn.QuadraticSkipSirenNet(geometry.dim, args.layer_size, args.n_layers).to(DEVICE)
-
 # model = torch.nn.Sequential(
 #     # IL.nn.encodings.HalfPlaneEncoding(geometry, 1000),
 #     # IL.nn.encodings.PointDistanceEncoding(geometry, 1000),
@@ -54,7 +51,6 @@ model = IL.nn.SirenNet(geometry.dim, args.layer_size, args.n_layers).to(DEVICE)
 #     # IL.nn.encodings.GaussianEncoding(geometry, 1000),
 #     IL.nn.MultiLayerPerceptron(1000, 256, 10)
 # ).to(DEVICE)
-
 # model = IL.nn.QuaNet(geometry.dim, dim_hidden=64, n_layers=5, activation=IL.nn.siren.SinusActivation, residual=True).to(DEVICE)
 
 

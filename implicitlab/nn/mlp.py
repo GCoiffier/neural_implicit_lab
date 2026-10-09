@@ -14,7 +14,7 @@ class LowRankLinear(nn.Module):
         return self.l2(self.l1(x))
 
 def MultiLayerPerceptron(dim_in: int, dim_hidden: int, n_layers: int, dim_out: int = 1, activ=nn.ReLU, final_activ=nn.Identity, geometric_init:bool = False):
-    """Simple Multi-layer Perceptron.
+    """A simple customizable Multi-layer Perceptron (MLP)
 
     Args:
         dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
@@ -99,8 +99,8 @@ class TailedMultiLayerPerceptron(nn.Module):
     Tailed Multilayer Perceptron architecture. A MLP where the output is a sum of all layer activations up to some specified depth. Acts as a natural LoD.
 
     References:
-        [1] T-MLP: Tailed Multi-Layer Perceptron for Level-of-Detail Signal Representation, Yang et al., 2025
-        [2] SAND: Spatially Adaptive Network Depth for Fast Sampling of Neural Implicit Surfaces, Yang et al., 2026
+        [1] T-MLP: Tailed Multi-Layer Perceptron for Level-of-Detail Signal Representation, Yang et al., 2025  
+        [2] SAND: Spatially Adaptive Network Depth for Fast Sampling of Neural Implicit Surfaces, Yang et al., 2026  
     """
     def __init__(self, dim_in : int, dim_hidden : int, n_layers : int):
         """

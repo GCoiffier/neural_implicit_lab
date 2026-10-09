@@ -7,7 +7,7 @@ from .base import FieldGenerator
 class Constant(FieldGenerator):
     
     def __init__(self, value:float):
-        """Constant field generator
+        """Constant field generator. Associates the same value at every point.
 
         Args:
             value (float): which value to output at every position in space
@@ -19,33 +19,14 @@ class Constant(FieldGenerator):
         return np.full(query.shape[0], self.val)
 
 
-class ListField(FieldGenerator):
-    
-    def __init__(self, *args):
-        """List of field generators. Used to combine different fields.
-
-        Args:
-            *args: all the fields to be combined.
-        """
-        super().__init__()
-        self.fields = args
-
-    def compute(self, query: np.ndarray) -> np.ndarray:
-        return tuple(field.compute(query) for field in self.fields)
-
-    def compute_on(self, query: np.ndarray) -> np.ndarray:
-        return tuple(field.compute_on(query) for field in self.fields)
-
-
-
 class CustomFunction(FieldGenerator):
     
     def __init__(self, fun, fun_on = None):
-        """_summary_
+        """Custom function field generation. Considers a function f over space and associates to each point x the value f(x)
 
         Args:
-            fun (Callable): _description_
-            fun_on (Callable, optional): _description_. Defaults to None.
+            fun (Callable): the function to be called.
+            fun_on (Callable, optional): a specific function to be called instead of `fun` if the point is on the surface. Defaults to None.
         """
         super().__init__()
         self.fun = np.vectorize(fun, signature="(n)->()")

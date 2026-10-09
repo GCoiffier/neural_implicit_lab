@@ -45,7 +45,7 @@ class Muon(torch.optim.Optimizer):
     """
     Muon - MomentUm Orthogonalized by Newton-schulz
 
-    https://kellerjordan.github.io/posts/muon/
+    [https://kellerjordan.github.io/posts/muon/](https://kellerjordan.github.io/posts/muon/)
 
     Muon internally runs standard SGD-momentum, and then performs an orthogonalization post-
     processing step, in which each 2D parameter's update is replaced with the nearest orthogonal
@@ -57,7 +57,12 @@ class Muon(torch.optim.Optimizer):
     Hidden convolutional weights can be trained using Muon by viewing them as 2D and then
     collapsing their last 3 dimensions.
 
-    Arguments:
+    Muon has been shown to improve the accuracy of neural implicit representations.
+
+    References:
+        _Optimizing Rank for High-Fidelity Implicit Neural Representations, J. McGinnis et al., 2026
+
+    Args:
         lr: The learning rate, in units of spectral norm per update.
         weight_decay: The AdamW-style weight decay.
         momentum: The momentum. A value of 0.95 here is usually fine.
@@ -147,20 +152,22 @@ class MuonWithAuxAdam(torch.optim.Optimizer):
 
     You can see an example usage below:
 
-    https://github.com/KellerJordan/modded-nanogpt/blob/master/records/052525_MuonWithAuxAdamExample/b01550f9-03d8-4a9c-86fe-4ab434f1c5e0.txt#L470
-    ```
-    hidden_matrix_params = [p for n, p in model.blocks.named_parameters() if p.ndim >= 2 and "embed" not in n]
-    embed_params = [p for n, p in model.named_parameters() if "embed" in n]
-    scalar_params = [p for p in model.parameters() if p.ndim < 2]
-    head_params = [model.lm_head.weight]
+    [https://github.com/KellerJordan/modded-nanogpt/blob/master/records/052525_MuonWithAuxAdamExample/b01550f9-03d8-4a9c-86fe-4ab434f1c5e0.txt#L470](https://github.com/KellerJordan/modded-nanogpt/blob/master/records/052525_MuonWithAuxAdamExample/b01550f9-03d8-4a9c-86fe-4ab434f1c5e0.txt#L470)
+    
+    Example:
+        ```python
+        hidden_matrix_params = [p for n, p in model.blocks.named_parameters() if p.ndim >= 2 and "embed" not in n]
+        embed_params = [p for n, p in model.named_parameters() if "embed" in n]
+        scalar_params = [p for p in model.parameters() if p.ndim < 2]
+        head_params = [model.lm_head.weight]
 
-    from muon import MuonWithAuxAdam
-    adam_groups = [dict(params=head_params, lr=0.22), dict(params=embed_params, lr=0.6), dict(params=scalar_params, lr=0.04)]
-    adam_groups = [dict(**g, betas=(0.8, 0.95), eps=1e-10, use_muon=False) for g in adam_groups]
-    muon_group = dict(params=hidden_matrix_params, lr=0.05, momentum=0.95, use_muon=True)
-    param_groups = [*adam_groups, muon_group]
-    optimizer = MuonWithAuxAdam(param_groups)
-    ```
+        from muon import MuonWithAuxAdam
+        adam_groups = [dict(params=head_params, lr=0.22), dict(params=embed_params, lr=0.6), dict(params=scalar_params, lr=0.04)]
+        adam_groups = [dict(**g, betas=(0.8, 0.95), eps=1e-10, use_muon=False) for g in adam_groups]
+        muon_group = dict(params=hidden_matrix_params, lr=0.05, momentum=0.95, use_muon=True)
+        param_groups = [*adam_groups, muon_group]
+        optimizer = MuonWithAuxAdam(param_groups)
+        ```
     """
     def __init__(self, param_groups):
         for group in param_groups:

@@ -38,7 +38,7 @@ class RandomFourierEncoding(nn.Module):
         return torch.cat((torch.cos(vp), torch.sin(vp)), dim=-1)
 
 
-class HalfPlaneEncoding(nn.Module):
+class HyperplaneEncoding(nn.Module):
     def __init__(self, geometry, n_points: int):
         """Encoding that considers points with normals sampled on the geometry and applies the signed distance to each corresponding hyperplanes:
 

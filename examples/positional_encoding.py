@@ -16,9 +16,9 @@ DEVICE = IL.utils.get_device()
 ####### Dataset Sampling
 
 field = IL.fields.Distance(geometry, signed=True, square=False)
-sampling_strat = IL.sampling_strategy.CombinedStrategy([
-    IL.sampling_strategy.UniformBox(geometry),
-    IL.sampling_strategy.NearGeometryGaussian(geometry)
+sampling_strat = IL.sampling_strategies.CombinedStrategy([
+    IL.sampling_strategies.UniformBox(geometry),
+    IL.sampling_strategies.NearGeometryGaussian(geometry)
 ], [2., 1.])
 
 sampler = IL.PointSampler(geometry, sampling_strat, field)

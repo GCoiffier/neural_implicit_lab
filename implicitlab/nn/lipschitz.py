@@ -5,8 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from deel import torchlip
 
-from .lip_activations import Householder
-
 #######################################################################################################################################
 
 def DenseLipBjorck(
@@ -190,15 +188,15 @@ def DenseLipAOL(dim_in: int, dim_hidden: int, n_layers: int, dim_out: int = 1, c
 
 class CPLLipschitzDenseLayer(nn.Module):
 
-    def __init__(self, in_features, inner_dim=-1, activation = nn.ReLU(), power_it_max_iter: int = 10):
+    def __init__(self, dim_in, dim_hidden=-1, activation = nn.ReLU(), power_it_max_iter: int = 10):
         super().__init__()
         
-        self.in_features = in_features
-        inner_dim = inner_dim if inner_dim != -1 else in_features
+        self.in_features = dim_in
+        dim_hidden = dim_hidden if dim_hidden != -1 else dim_in
         self.activation = activation
 
-        self.weight = nn.Parameter(torch.empty(inner_dim, in_features))
-        self.bias = nn.Parameter(torch.empty(inner_dim))
+        self.weight = nn.Parameter(torch.empty(dim_hidden, dim_in))
+        self.bias = nn.Parameter(torch.empty(dim_hidden))
 
         nn.init.xavier_normal_(self.weight)
         fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
@@ -213,8 +211,7 @@ class CPLLipschitzDenseLayer(nn.Module):
         return x / (torch.norm(x) + 1e-12)
 
     def l2norm_power_iteration(self, max_iter):
-        """Compute the largest singular value with a small number of
-        iteration for training"""
+        # Computes the largest singular value with a small number of iteration for training
         for _ in range(max_iter):
             v = self.normalize(F.linear(self.u, self.weight))
             self.u.data = self.normalize(F.linear(v, self.weight.T))
@@ -251,7 +248,7 @@ def DenseLipCPL(dim_in: int, dim_hidden: int, n_layers: int,  dim_out: int = 1, 
         with_group_sort (bool, optional): whether to add a GroupSort2 between each layer to slightly increase accuracy. Defaults to True
 
     References:
-        _A Dynamical System Perspective for Lipschitz Neural Networks_, Meunier et al., 2022
+        [1] _A Dynamical System Perspective for Lipschitz Neural Networks_, Meunier et al., 2022
     """
     layers = []
     layers.append(nn.ZeroPad1d((0, dim_hidden-dim_in)))

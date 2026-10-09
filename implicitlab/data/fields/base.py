@@ -12,7 +12,7 @@ class FieldGenerator(ABC):
     
     @abstractmethod
     def compute(self, query: np.ndarray) -> np.ndarray: 
-        """_summary_
+        """Computes the value of the field at each point of the query array.
 
         Args:
             query (np.ndarray): the query points
@@ -23,7 +23,7 @@ class FieldGenerator(ABC):
         pass
 
     def compute_on(self, query: np.ndarray) -> np.ndarray:
-        """_summary_
+        """Computes the value of the field at each point of the query array. Points are supposed to be on the geometry.
         
         Note:
             Defining this function is optional. By default, `compute_on(query)` returns the value of `compute(query)`. Since values of a field are sometimes known for query points _on_ the geometry (for instance: a distance field has value 0 on the surface), it can be useful to avoid the field computation and overwrite this function.

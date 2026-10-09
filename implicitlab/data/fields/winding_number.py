@@ -10,16 +10,14 @@ from .utils import pseudo_surface_from_polyline, estimate_normals, estimate_vert
 #######################################################################################
 
 def WindingNumber(geom : M.mesh.Mesh):
-    """_summary_
+    """Computes the generalized winding number for the given shape.
+    Is based on the `fast_winding_number` function from libigl.
 
     Args:
-        geom (M.mesh.Mesh): _description_
+        geom (M.mesh.Mesh): the geometry to consider.
 
     Raises:
-        UnsupportedGeometryFormat: _description_
-
-    Returns:
-        _type_: _description_
+        UnsupportedGeometryFormat: Fails if called on a geometry that is not a 3D SurfaceMesh, a 3D point cloud or a 2D polyline.
 
     References:
         - [Fast winding numbers for soups and clouds](https://dl.acm.org/doi/10.1145/3197517.3201337), Barill et al., 2018  

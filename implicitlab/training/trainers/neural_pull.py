@@ -1,6 +1,6 @@
 import torch
 from torch.nn import functional as F
-from .base import Trainer
+from .base_trainer import Trainer
 
 class NeuralPullTrainer(Trainer):
 

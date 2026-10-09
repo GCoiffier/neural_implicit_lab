@@ -1,8 +1,9 @@
+---
+title: Geometrical queries
+---
 
-## Installation
 
 
-## 
 
 ## A full example: SIRENNet
 

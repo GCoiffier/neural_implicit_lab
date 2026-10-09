@@ -1,17 +1,19 @@
 import torch
 from torch.nn import functional as F
-from .base import Trainer, TrainingConfig
+from .base_trainer import Trainer, TrainingConfig
 from ..losses import HKRLoss
 
 class hKRTrainer(Trainer):
-    """Trainer minimizing the hinge-Kantorovitch-Rubinstein loss.
+    """Trainer minimizing the hinge-Kantorovitch-Rubinstein loss. For a Lipschitz model $f$ and some binary labels $y(x) \\in \\{-1, 1\\}$, the hKR loss is defined as:
+
+    $$\\mathcal{L}_{hKR}(x) = -yf(x) + \\lambda \\max(0, m - yf(x)).$$
 
     Warning:
-        This trainer only yields valid result when used on a Lipschitz architecture
+        This trainer only yields valid result when used on a Lipschitz architecture.
 
     References:
-        [1] Achieving robustness in classification using optimal transport with hinge regularization, Serrurier et al, 2021
-        [2] 1-Lipschitz Neural Distance Fields, Coiffier and Béthune, 2024
+        [1] _Achieving robustness in classification using optimal transport with hinge regularization_, Serrurier et al, 2021  
+        [2] _1-Lipschitz Neural Distance Fields_, Coiffier and Béthune, 2024
     """
     def __init__(self, config : TrainingConfig, margin: float = 1e-2, lmbd: float = 100., test_mode="sdf"):
         """

@@ -1,8 +1,0 @@
----
-title: Installation
----
-
-
-## Dependencies
-
-todo

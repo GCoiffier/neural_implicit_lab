@@ -1,19 +1,25 @@
-
-## Installation
-
-
-## 
-
-## A full example: SIRENNet
-
-### Setting up the data
-
-### Train a model
+---
+title: Training a neural implicit
+---
 
 
+## Preparing your neural model
 
-## Another example: Lipschitz distance fields
 
-### Setting up the data
+## The Trainer class
 
-### Train a model
+
+```python
+config = TrainingConfig(
+    BATCH_SIZE=10_000,
+    TEST_BATCH_SIZE = 10000,
+    N_EPOCHS=500,
+    LEARNING_RATE=1e-4,
+    DEVICE="cuda",
+    OPTIMIZER="adam",
+)
+```
+
+## Training
+
+`Trainer` class

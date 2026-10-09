@@ -11,16 +11,14 @@ from .utils import extrude_2D_polyline
 #######################################################################################
 
 def Nearest(geom : M.mesh.Mesh):
-    """_summary_
+    """Computes the coordinates of the nearest point on the geometry.
 
     Args:
-        geom (M.mesh.Mesh): _description_
-
+        geom (M.mesh.Mesh): The geometry to consider
+   
     Raises:
-        UnsupportedGeometryFormat: _description_
+        UnsupportedGeometryFormat: Currently implemented for 3D surface meshes, 3D point clouds, 2D polylines and 2D point clouds.
 
-    Returns:
-        _type_: _description_
     """
     match geom.geom_type:
         case GeometryType.SURFACE_MESH_3D:

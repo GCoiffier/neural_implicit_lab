@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from ..diff_op import *
+from ..diff_op import gradient
 
 class HKRLoss:
     def __init__(self, margin: float = 1e-2, lmbd: float = 10.):
@@ -103,23 +103,18 @@ class SALLoss:
         return torch.mean(torch.abs(torch.abs(y_pred) - 1)**self.l)
     
 
-class SALDLoss:
+def SALDLoss(y_pred,y_target):
     """
     Sign agnostic learning loss with derivatives
-
+    
+    Args:
+        y_pred (torch.Tensor): predicted values by the model
+        y_target (torch.Tensor): target values
+    
     References:
         _SALD: Sign Agnostic Learning with Derivatives_, Atzmon and Lipman, 2020
     """
-    def __init__(self): pass
-
-    def __call__(self,y_pred,y_target):
-        """
-        Args:
-            y_pred (torch.Tensor): predicted values by the model
-            y_target (torch.Tensor): target values
-        """
-        return torch.min( torch.norm(y_pred-y_target), torch.norm(y_pred+y_target))
-    
+    return torch.min( torch.norm(y_pred-y_target), torch.norm(y_pred+y_target))
 
 
 class HotspotLoss:
@@ -127,12 +122,21 @@ class HotspotLoss:
     $$\\mathcal{L}_{\\text{heat}}(f) = \\mathbb{E}_x \\left[ e^{-2 \\lambda |f(x)|} \\left( || \\nabla f||^2 + 1 \\right) \\right].$$
 
     References:
-        - HotSpot: Signed Distance Function Optimization with an Asymptotically Sufficient Condition, Wang et al., 2025
+        - _HotSpot: Signed Distance Function Optimization with an Asymptotically Sufficient Condition_, Wang et al., 2025
     """
     def __init__(self, lmbd:float ):
         self.lmbd = lmbd  
 
     def __call__(self, X, Y, grad=None):
+        """
+        Args:
+            X (torch.Tensor): model input tensor.
+            Y (torch.Tensor): model output tensor.
+            grad (torch.Tensor, optional): gradient of Y with relation to X. If not specified, will be re-computed inside the function. Defaults to None.
+
+        Returns:
+           torch.Tensor: the evaluated loss.
+        """
         if grad is None:
             grad = torch.autograd.grad(Y, X, grad_outputs=torch.ones_like(Y), create_graph=True)[0]
         grad_norm = grad.norm(dim=-1)

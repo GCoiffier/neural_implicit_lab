@@ -2,22 +2,9 @@
 title: Implicit fields
 ---
 
-`FieldGenerator` objects are given to a `PointSampler` object to be called on all the sampled points.
+As the main goal of a neural implicit is to represent a signal over space, it is often required to generate a dataset of training points where the values for this signal is known. This job is handled by `FieldGenerator` objects. They are given as arguments to a `PointSampler` object to be called on all the sampled points.
 
-## Example
-
-```python
-import implicitlab as IL
-
-sampler = PointSampler(
-    geometry, # some loaded geometry
-    IL.sampling_strategy.UniformBox(geometry), # the sampling strategy
-    IL.fields.Occupancy(geometry, v_in=-1, v_out=1, v_on=-1) # the field to compute
-)
-points, field_values = sampler.sampler(10_000) 
-```
-
-This example wil sample 10k points uniformly in a bounding box around the geometry object. It returns the points and an occupancy value for each point.
+Usual fields are implemented directly into `implicitlab`.
 
 ## Available fields
 

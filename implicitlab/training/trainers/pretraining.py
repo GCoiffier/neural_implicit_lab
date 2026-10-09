@@ -1,4 +1,4 @@
-from .base import Trainer, TrainingConfig
+from .base_trainer import Trainer, TrainingConfig
 from ...utils import get_model_dim
 import time
 from tqdm import trange
@@ -15,10 +15,10 @@ class SphereInitializeTrainer(Trainer):
     def __init__(self, n_batches: int, config: TrainingConfig, **kwargs):
         """
         Args:
-            n_batches (int): _description_
-            config (TrainingConfig): _description_
+            n_batches (int): number of training batches (and optimizer step) to perform.
+            config (TrainingConfig): training hyperparameters.
         
-        Additionnal Args:
+        Keyword Args:
             radius (float, optional): radius of the sphere to consider. Defaults to 1.   
         """
         super().__init__(config)

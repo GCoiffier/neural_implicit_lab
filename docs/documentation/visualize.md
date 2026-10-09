@@ -1,6 +1,5 @@
 ---
 title: Visualization
-weight: 1
 ---
 
 

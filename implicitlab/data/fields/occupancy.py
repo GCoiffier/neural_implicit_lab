@@ -7,19 +7,16 @@ from .utils import pseudo_surface_from_polyline
 from ..geometry import GeometryType
 
 def Occupancy(geom : M.mesh.Mesh, v_in:float, v_out:float, v_on:float):
-    """_summary_
+    """Computes the occupancy of the given geometry, i.e. a constant value inside and another constant value outside of the object.
 
     Args:
-        geom (M.mesh.Mesh): _description_
-        v_in (float): _description_
-        v_out (float): _description_
-        v_on (float): _description_
+        geom (M.mesh.Mesh): geometrical object to consider.
+        v_in (float): value for points inside the object.
+        v_out (float): value for points outside the object.
+        v_on (float): value for points on the boundary of the object.
 
     Raises:
-        UnsupportedGeometryFormat: _description_
-
-    Returns:
-        _type_: _description_
+        UnsupportedGeometryFormat: only makes sense for (closed) 2D polylines and 3D surface meshes.
     """
     match geom.geom_type:
         # case GeometryType.POINT_CLOUD_2D:
@@ -75,8 +72,3 @@ class _Occupancy3D(_BaseOccupancy):
         else:
             occ = np.where(wn<=-self.threshold, self.v_in, self.v_out)
         return occ
-
-#######################################################################################
-
-class _Occupancy3DPointCloud(_BaseOccupancy):
-    pass

@@ -1,10 +1,18 @@
 import torch
 from torch.nn import functional as F
-from .base import Trainer
+from .base_trainer import Trainer
 from ..losses import EikonalLoss
 
 class SimpleRegressionTrainer(Trainer):
-    def __init__(self, config, lossfun):
+    """
+    A simple trainer that performs regression between the output of a model and some ground truth values.
+    """
+    def __init__(self, config, lossfun = F.mse_loss):
+        """
+        Args:
+            config (TrainingConfig): The training hyperparameters.
+            lossfun (Callable): the loss function to consider. Defaults is `torch.nn.functional.mse_loss`
+        """
         super().__init__(config)
         self.lossfun = lossfun
 
@@ -21,7 +29,18 @@ class SimpleRegressionTrainer(Trainer):
     
 
 class RegressionEikonalTrainer(Trainer):
+    """
+    A simple trainer that combines mean square error regression to distance values with an eikonal loss.
+
+    The model is evaluated on a box [-1, 1]^d
+    """
+        
     def __init__(self, config, eikonal_weight:float = 0.01):
+        """
+        Args:
+            config (TrainingConfig): The training hyperparameters.
+            eikonal_weight (float, optional): weigth associated with the eikonal loss. Defaults to 0.01.
+        """
         super().__init__(config)
         self.eikonal_weight: float = eikonal_weight
 

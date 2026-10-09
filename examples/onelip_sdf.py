@@ -20,9 +20,9 @@ print("DEVICE:", DEVICE)
 
 # training data
 train_field = IL.fields.Occupancy(geometry, v_in=-1, v_out=1, v_on=-1)
-train_sampling_strat = IL.sampling_strategy.CombinedStrategy([
-    IL.sampling_strategy.UniformBox(geometry),
-    IL.sampling_strategy.NearGeometryGaussian(geometry, 0.02)
+train_sampling_strat = IL.sampling_strategies.CombinedStrategy([
+    IL.sampling_strategies.UniformBox(geometry),
+    IL.sampling_strategies.NearGeometryGaussian(geometry, 0.02)
 ], [1., 9.])
 train_sampler = PointSampler(geometry, train_sampling_strat, train_field)
 points, val = train_sampler.sample(20_000 if geometry.dim==2 else 300_000)
@@ -48,7 +48,7 @@ M.mesh.save(geometry, os.path.join(OUTPUT_DIR, "input_geometry.obj"))
 
 # testing data
 test_field = IL.fields.Distance(geometry, signed=True)
-test_sampling_strat = IL.sampling_strategy.UniformBox(geometry)
+test_sampling_strat = IL.sampling_strategies.UniformBox(geometry)
 test_sampler = PointSampler(geometry, test_sampling_strat, test_field)
 test_pts, test_val = test_sampler.sample(10_000)
 test_data = IL.data.make_tensor_dataset((test_pts, test_val), DEVICE)

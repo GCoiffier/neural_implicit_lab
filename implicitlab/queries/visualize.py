@@ -21,7 +21,7 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain: M.geo
         res (int, optional): Image resolution. Defaults to 800.
         batch_size (int, optional): Size of forward batches. Defaults to 1000.
 
-    Additional Args:
+    Keyword Args:
         n_contours (int, optional): Defaults to 16.    
     """
     assert domain.dim == 2
@@ -204,7 +204,7 @@ def reconstruct_surface_marching_cubes(
         res (int, optional): resolution of the marching cubes grid. Defaults to 100.
         batch_size (int, optional): batch size for forward computation. Defaults to 5000.
 
-    Additionnal Args:
+    Keyword Args:
         use_tqdm (bool, optional): whether to display a progress bar during computation. Defaults to False.
         num_workers (int, optional): number of workers for the dataloader to feed to the GPU. Defaults to -1 (number of cpu cores).
 
@@ -213,7 +213,7 @@ def reconstruct_surface_marching_cubes(
 
     References:
         - Marching cubes: A high resolution 3D surface construction algorithm, Lorensen & Cline (1998)  
-        - https://scikit-image.org/docs/0.25.x/auto_examples/edges/plot_marching_cubes.html
+        - https://scikit-image.org/docs/0.25.x/auto_examples/edges/plot_marching_cubes.html  
     """
     if isinstance(iso, (int,float)): iso = [iso]
     

@@ -38,6 +38,9 @@ plugins:
     warning: true
     reverse: false
     headless_included: false
+- bibtex:
+    bib_file: "docs/bibliography.bib"
+    csl_file: "docs/apa-eu.csl"
 
 
 markdown_extensions:
@@ -57,6 +60,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - footnotes
 
 extra_javascript:
   - javascripts/mathjax.js
@@ -74,29 +78,19 @@ nav:
   - Home: "index.md"
 
   # - Tutorials: 
-  #   - "tutorial/installation.md"
   #   - "tutorial/preparing_dataset.md"
   #   - "tutorial/training_model.md"
   #   - "tutorial/geometrical_queries.md"
+  #   - "tutorial/full_example.md"
 
-  - Dataset Module:
-    - "data_management/geometry.md"
-    - "data_management/point_sampling.md"
-    - "data_management/field_computations.md"
-
-  - Neural Architectures:
-    - "nn/architectures.md"
-    - "nn/encodings.md"
-    - "nn/loading_saving_models.md"
-
-  - Training Module:
-    - "training/trainer.md"
-    - "training/callbacks.md"
-    - "training/loss_functions.md"
-  
-  - Query Module:
-    - "queries/queries.md"
-    - "queries/visualize.md"
-
-  - "utils.md"
-  - "diff_op.md"
+  - Documentation:
+    - "documentation/dataset_sampling.md"
+    - "documentation/field_computations.md"
+    - "documentation/nn_architectures.md"
+    - "documentation/optimizers.md"
+    - "documentation/trainer.md"
+    - "documentation/loss_functions.md"
+    - "documentation/visualize.md"
+    - "documentation/queries.md"
+    - "documentation/diff_op.md"
+    - "documentation/utils.md"

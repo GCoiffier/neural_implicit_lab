@@ -8,15 +8,15 @@ from .utils import pseudo_surface_from_polyline
 from ..geometry import GeometryType
 
 def Distance(geom: M.mesh.Mesh, signed: bool = True, square: bool = False):
-    """_summary_
+    """Computes the distance to the geometry.
 
     Args:
-        geom (M.mesh.Mesh): _description_
-        signed (bool, optional): _description_. Defaults to True.
-        square (bool, optional): _description_. Defaults to False.
+        geom (M.mesh.Mesh): the geometry object to consider.
+        signed (bool, optional): whether the distance is signed or not (i.e. negative inside and positive outside the shape). Defaults to True.
+        square (bool, optional): whether to square the value of the distance (while keeping the sign). Defaults to False.
 
     Raises:
-        UnsupportedGeometryFormat: _description_
+        UnsupportedGeometryFormat: Fails if the geometry does not have the right format.
     """
     match geom.geom_type:
         case GeometryType.POLYLINE_2D:
