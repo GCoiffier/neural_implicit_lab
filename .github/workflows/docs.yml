@@ -18,7 +18,7 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: apt install pandoc
+      - run: sudo apt-get update && sudo apt-get install -y pandoc
       - run: pip3 install mkdocs-material mkdocstrings mkdocstrings[python] mkdocs-nav-weight mkdocs-bibtex
       - run: pip3 install --editable .
       - run: echo `mkdocs --version`
