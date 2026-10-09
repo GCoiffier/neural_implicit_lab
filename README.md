@@ -6,13 +6,13 @@ The implicit lab is a python library for the computation of _implicit neural rep
 Implicit neural representations are a recent technique for encoding a signal in the parameters of a neural network.
 This library focuses of neural representations of surfaces, which are defined as the zero level set of some continuous function over space, like the [signed distance function](https://en.wikipedia.org/wiki/Signed_distance_function).
 
+<p align="center">
+  <img src="docs/_img/representative_image_2d.jpeg" width="40%"/>  
+</p>
 
-![](docs/_img/representative_image_2d.jpeg)
-*Signed distance field of a 2D dragon model*
-
-
-![](docs/_img/representative_image_3d.jpeg)
-*Level sets of a 3D lamp model computed from an oriented point cloud*
+<p align="center">
+  <img src="docs/_img/representative_image_3d.jpeg" width="100%"> 
+</p>
 
 The (WIP) documentation can be found here: [https://GCoiffier.github.io/neural_implicit_lab/](https://GCoiffier.github.io/neural_implicit_lab/)
 
