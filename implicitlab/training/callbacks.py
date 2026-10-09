@@ -8,7 +8,7 @@ import torch
 
 class Callback:
     """
-    An empty Callback object to be called inside a Trainer (see trainers/base.py)
+    An empty Callback object to be called inside a Trainer (see trainers/base_trainer.py)
 
     Callback affect the trainer they are associated with, or provide log infos, or anything you can think of.
     Inside a Trainer, they can be called at several points during training:
@@ -86,10 +86,11 @@ class CheckpointCB(Callback):
                 save_model(model, path)
 
 class Render2DCB(Callback):
-
+    """
+    A Callback that makes a snapshot of a 2D neural implicit by sampling its values on a grid. Can also sample the gradient's norm and make a contour plot.
+    """
     def __init__(self, save_folder: str, freq: int, plot_domain: M.geometry.AABB = None, resolution: int = 800, output_contours: bool = True, output_gradient_norm: bool = True, **kwargs):
-        """A Callback that makes a snapshot of a 2D neural implicit by sampling its values on a grid. Can also sample the gradient's norm and make a contour plot.
-
+        """
         Args:
             save_folder (str): output folder into which the images are saved
             freq (int): frequency (in terms of number of epochs) at which a snapshot is taken
@@ -98,7 +99,7 @@ class Render2DCB(Callback):
             output_contours (bool, optional): Whether to output a contour plot of the neural field. Defaults to True.
             output_gradient_norm (bool, optional): Whether to also output a plot of the norm of the neural field's gradient. Defaults to True.
         
-        Additionnal arguments
+        Keyword Args:
             prefix (str, optional): prefix for the name of the saved file. The name will have the form <prefix>_e<n_epoch>_iso<iso_value>. Defaults to the empty string.
             n_contours (int, optional): Defaults to 16.    
 
@@ -139,16 +140,21 @@ class Render2DCB(Callback):
                 n_contours = self.n_contours
             )
 
-class MarchingCubeCB(Callback):
-    def __init__(self, save_folder: str, freq: int, domain: M.geometry.AABB = None, res: int = 100, iso=0, prefix: str = ""):
-        """A Callback that makes a snapshot of a 3D neural implicit by using the marching cubes algorithm to extract some level sets.
 
+class MarchingCubeCB(Callback):
+    """A Callback that makes a snapshot of a 3D neural implicit by using the marching cubes algorithm to extract some level sets."""
+
+    def __init__(self, save_folder: str, freq: int, domain: M.geometry.AABB = None, res: int = 100, iso=0, **kwargs):
+        """
         Args:
             save_folder (str): output folder into which the images are saved
             freq (int): frequency (in terms of number of epochs) at which a snapshot is taken
             domain (M.geometry.AABB, optional): AABB domain over which the grid is defined. If not provided, the default domain will be [-1.2 ; 1.2]^3. Defaults to None.
             res (int, optional): Grid resolution for marching cubes. res^3 values will be sampled from the neural model. Defaults to 100.
             iso (int, optional): Which iso-level will be reconstructed. Several levels can be provided in a list. Defaults to 0.
+            prefix (str, optional): prefix for the name of the saved file. The name will have the form <prefix>_e<n_epoch>_iso<iso_value>. Defaults to the empty string.
+        
+        Keyword Args:
             prefix (str, optional): prefix for the name of the saved file. The name will have the form <prefix>_e<n_epoch>_iso<iso_value>. Defaults to the empty string.
         """
         super().__init__()
@@ -163,7 +169,7 @@ class MarchingCubeCB(Callback):
             self.iso = [iso]
         else:
             self.iso = iso
-        self.prefix = prefix
+        self.prefix = kwargs.get("prefix", "")
         if len(self.prefix)>0 and self.prefix[-1]!='_':
             self.prefix += '_'
     
@@ -205,12 +211,12 @@ class MarchingCubeCB(Callback):
 
 
 
-class ResampleCallback(Callback):
-
+class ResampleCB(Callback):
+    """
+    A callback that regenerates the training dataset at a specific frequency
+    """
     def __init__(self, sampler : PointSampler, n_points: int, freq: int = 1, on_ratio:float = 0.01):
         """
-        A callback that regenerates the training dataset at a specifiec frequency
-        
         Args:
             sampler (PointSampler): The PointSampler object to be called that generates the points and their values.
             n_points (int): number of points to sample.

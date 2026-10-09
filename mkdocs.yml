@@ -89,6 +89,7 @@ nav:
     - "documentation/nn_architectures.md"
     - "documentation/optimizers.md"
     - "documentation/trainer.md"
+    - "documentation/callbacks.md"
     - "documentation/loss_functions.md"
     - "documentation/visualize.md"
     - "documentation/queries.md"

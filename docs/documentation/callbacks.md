@@ -1,6 +1,5 @@
 ---
 title: Callbacks
-weight: 5
 ---
 
 Callback are small piece of logic that affect the trainer they are associated with, provide log infos, or do anything you can think of.  
@@ -30,7 +29,7 @@ trainer.add_callbacks(
     options:
         heading_level: 3
         filters:
-        - "!Callback"
+            - "!Callback"
 
 
 ## Write your own callback
@@ -40,11 +39,12 @@ All callbacks inherit from the base class `Callback`, which implements four meth
 ```python
 class Callback:
     def callOnBeginTrain(self, trainer, model): pass
-    
     def callOnEndTrain(self, trainer, model): pass
-    
+
+    def callOnBeginEpoch(self, trainer, model): pass
+    def callOnEndEpoch(self, trainer, model): pass
+
     def callOnEndForward(self, trainer, model): pass
-    
     def callOnEndTest(self, trainer, model): pass
 ```
 

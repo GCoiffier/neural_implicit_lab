@@ -95,7 +95,7 @@ trainer = TMLPTrainer(lod_weights,
 ))
 trainer.set_training_data(TensorDataset(torch.zeros((1,1), device=DEVICE))) # dummy data to be erased by the resampling callback
 trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
-trainer.add_callbacks(callbacks.ResampleCallback(sampler, args.n_points, device=DEVICE, freq=50, on_ratio=0.4))
+trainer.add_callbacks(callbacks.ResampleCB(sampler, args.n_points, device=DEVICE, freq=50, on_ratio=0.4))
 if geometry.dim == 2:
     trainer.add_callbacks(callbacks.Render2DCB("output", 10))
 elif geometry.dim == 3:
