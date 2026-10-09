@@ -7,12 +7,12 @@ Implicit neural representations are a recent technique for encoding a signal in 
 This library focuses of neural representations of surfaces, which are defined as the zero level set of some continuous function over space, like the [signed distance function](https://en.wikipedia.org/wiki/Signed_distance_function).
 
 <figure markdown>
-  ![](_img/representative_image_2d.jpeg){ width="400" }
+  ![](docs/_img/representative_image_2d.jpeg){ width="400" }
 *Signed distance field of a 2D dragon model [Sitzmann et al., 2020]*
 </figure>
 
 <figure markdown>
-  ![](_img/representative_image_3d.jpeg){ width="800" }
+  ![](docs/_img/representative_image_3d.jpeg){ width="800" }
 *Level sets of a 3D lamp model computed from an oriented point cloud [Coiffier & Béthune, 2024]*
 </figure>
 
