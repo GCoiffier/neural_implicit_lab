@@ -18,7 +18,7 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip3 install mkdocs-material mkdocstrings mkdocstrings[python] mkdocs-nav-weight mkdocs-bibtex
+      - run: pip3 install mkdocs-material mkdocstrings mkdocstrings[python] mkdocs-nav-weight mkdocs-bibtex pypandoc
       - run: pip3 install --editable .
       - run: echo `mkdocs --version`
       - run: mkdocs gh-deploy --force
