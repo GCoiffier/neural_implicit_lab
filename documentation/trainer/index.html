@@ -1,0 +1,3205 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../optimizers/">
+      
+      
+        <link rel="next" href="../callbacks/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Trainers - ImplicitLab</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../custom_css.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#implicitlab.training.trainers.base_trainer.TrainingConfig" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="ImplicitLab" class="md-header__button md-logo" aria-label="ImplicitLab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ImplicitLab
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Trainers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/GCoiffier/neural_implicit_lab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GCoiffier/neural_implicit_lab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ImplicitLab" class="md-nav__button md-logo" aria-label="ImplicitLab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ImplicitLab
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/GCoiffier/neural_implicit_lab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GCoiffier/neural_implicit_lab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/full_example/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Full example
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geometry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Geometrical objects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dataset_sampling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dataset sampling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../field_computations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implicit fields
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nn_architectures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Neural Network Architectures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimizers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Optimizers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trainers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trainers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.TrainingConfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TrainingConfig
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trainer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Trainer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.add_callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_callbacks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.add_scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_scheduler
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.evaluate_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate_model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.forward_test_batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        forward_test_batch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.forward_train_batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        forward_train_batch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.get_optimizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_optimizer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.set_test_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_test_data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.set_training_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_training_data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.step_scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        step_scheduler
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.train" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        train
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.regression.RegressionEikonalTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RegressionEikonalTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.regression.SimpleRegressionTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SimpleRegressionTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.implicit_surface.ImplicitSurfaceTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ImplicitSurfaceTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.hkr.hKRTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hKRTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.pretraining.SphereInitializeTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SphereInitializeTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../callbacks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Callbacks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../loss_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loss Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visualize/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Geometrical queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../diff_op/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differential Operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utilities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.TrainingConfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TrainingConfig
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trainer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Trainer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.add_callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_callbacks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.add_scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_scheduler
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.evaluate_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate_model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.forward_test_batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        forward_test_batch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.forward_train_batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        forward_train_batch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.get_optimizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_optimizer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.set_test_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_test_data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.set_training_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_training_data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.step_scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        step_scheduler
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.base_trainer.Trainer.train" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        train
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.regression.RegressionEikonalTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RegressionEikonalTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.regression.SimpleRegressionTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SimpleRegressionTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.implicit_surface.ImplicitSurfaceTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ImplicitSurfaceTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.hkr.hKRTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hKRTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implicitlab.training.trainers.pretraining.SphereInitializeTrainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SphereInitializeTrainer
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>Trainers</h1>
+
+<div class="doc doc-object doc-module">
+
+
+
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="implicitlab.training.trainers.base_trainer.TrainingConfig" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">TrainingConfig</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">TEST_BATCH_SIZE</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">N_EPOCHS</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">LEARNING_RATE</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">DEVICE</span><span class="o">=</span><span class="s1">'cpu'</span><span class="p">,</span> <span class="n">OPTIMIZER</span><span class="o">=</span><span class="s1">'Adam'</span><span class="p">,</span> <span class="n">NUM_DATALOADER_WORKERS</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Configuration object storing hyperparameters for a <code>Trainer</code> class.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.TrainingConfig.BATCH_SIZE">BATCH_SIZE</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of samples per batch in the training data loader. Defaults to 100.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.TrainingConfig.TEST_BATCH_SIZE">TEST_BATCH_SIZE</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of samples per batch in the test data loader. Defaults to 5000.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.TrainingConfig.N_EPOCHS">N_EPOCHS</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of passes over the training dataset. Defaults to 100.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.TrainingConfig.LEARNING_RATE">LEARNING_RATE</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Learning rate given to the optimizer. Defaults to 1e-3.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.TrainingConfig.DEVICE">DEVICE</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Torch device on which training runs ("cpu", "cuda", ...). A warning is emitted if
+set to "cpu" while a GPU is available. Defaults to "cpu".</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.TrainingConfig.OPTIMIZER">OPTIMIZER</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Name of the optimizer (case-insensitive). One of "adam", "sgd", "muon", "adabound", or "custom". If "custom" is selected, the user must set <code>trainer.optimizer</code> before calling the <code>train</code> method). Unknown names fall back to Adam. Defaults to "Adam".</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.TrainingConfig.NUM_DATALOADER_WORKERS">NUM_DATALOADER_WORKERS</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of worker processes for the train data loaders. -1 means <code>torch.get_num_threads()</code>. Defaults to -1.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="implicitlab.training.trainers.base_trainer.Trainer" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">Trainer</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Base trainer class. Implements the optimization loop for a given neural implicit model.</p>
+<p>This class is not meant to be used directly, but to be inherited from. Subclasses need to implement the abstract methods <code>forward_train_batch</code> and <code>forward_test_batch</code>.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.Trainer.config">config</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="TrainingConfig(BATCH_SIZE=100, TEST_BATCH_SIZE=5000, N_EPOCHS=100, LEARNING_RATE=0.001, DEVICE='cpu', OPTIMIZER='Adam', NUM_DATALOADER_WORKERS=-1)
+
+  
+      dataclass
+   (implicitlab.training.trainers.base_trainer.TrainingConfig)" href="#implicitlab.training.trainers.base_trainer.TrainingConfig">TrainingConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The training hyperparameters.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.Trainer.train_data_loader">train_data_loader</span></code></td>
+            <td>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Loader over the training data. Set by <code>set_training_data</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.Trainer.test_data_loader">test_data_loader</span></code></td>
+            <td>
+                  <code><span title="torch.utils.data.DataLoader">DataLoader</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Loader over the test data. Set by <code>set_test_data</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.Trainer.optimizer">optimizer</span></code></td>
+            <td>
+                  <code><span title="implicitlab.training.losses.torch.optim.Optimizer">Optimizer</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The optimizer. Built at the start of <code>train</code>, unless <code>OPTIMIZER</code> is
+"custom", in which case it must be assigned by the user.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.Trainer.scheduler">scheduler</span></code></td>
+            <td>
+                  <code><span title="implicitlab.training.losses.torch.optim.lr_scheduler.LRScheduler">LRScheduler</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The learning rate scheduler, if any (see <code>add_scheduler</code>).</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.base_trainer.Trainer.callbacks">callbacks</span></code></td>
+            <td>
+                  <code><span title="list">list</span>[<span title="implicitlab.training.callbacks.Callback">Callback</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Callbacks called at different steps of the training loop.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>config</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="TrainingConfig(BATCH_SIZE=100, TEST_BATCH_SIZE=5000, N_EPOCHS=100, LEARNING_RATE=0.001, DEVICE='cpu', OPTIMIZER='Adam', NUM_DATALOADER_WORKERS=-1)
+
+  
+      dataclass
+   (implicitlab.training.trainers.base_trainer.TrainingConfig)" href="#implicitlab.training.trainers.base_trainer.TrainingConfig">TrainingConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The trainer parameters as a configuration object.
+If None, the default <code>TrainingConfig()</code> is used.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.add_callbacks" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">add_callbacks</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Adds callbacks to the trainer. All added callbacks are invoked at the beginning and the end of each training epoch.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>*args</code>
+            </td>
+            <td>
+                  <code><span title="implicitlab.training.callbacks.Callback">Callback</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The callbacks, given either as several arguments or as a single iterable.</p>
+              </div>
+            </td>
+            <td>
+                  <code>()</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="AssertionError">AssertionError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if one of the arguments is not a <code>Callback</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.add_scheduler" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">add_scheduler</span><span class="p">(</span><span class="n">scheduler_cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Registers a learning rate scheduler. It is instantiated at the start of <code>train</code> as
+<code>scheduler_cls(optimizer, *args, **kwargs)</code> and stepped once at the end of each epoch.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>scheduler_cls</code>
+            </td>
+            <td>
+                  <code><span title="type">type</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The scheduler class (not an instance), for instance <code>torch.optim.lr_scheduler.StepLR</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>*args</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Positional arguments given to the scheduler after the optimizer.</p>
+              </div>
+            </td>
+            <td>
+                  <code>()</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Keyword arguments given to the scheduler.</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">trainer</span><span class="o">.</span><span class="n">add_scheduler</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">StepLR</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span></code></pre></div>
+</details>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.evaluate_model" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">evaluate_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Evaluates the model on the test dataset. Does nothing if no test data was provided.</p>
+<p>Sums the losses returned by the <code>forward_test_batch</code> method over all test batches, then calls the <code>callOnEndTest</code> method of the callbacks.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="implicitlab.training.losses.torch.nn.Module">Module</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The model to evaluate.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.forward_test_batch" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">forward_test_batch</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+  </span>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Computes the test loss over one batch. To be implemented by subclasses.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>data</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="implicitlab.training.losses.torch.Tensor">Tensor</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The tensors of one batch of the test dataset, already on <code>config.DEVICE</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="implicitlab.training.losses.torch.nn.Module">Module</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The model being evaluated.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>torch.Tensor: The scalar loss of the batch.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.forward_train_batch" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">forward_train_batch</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+  </span>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Computes the training loss over one batch. To be implemented by subclasses.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>data</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="implicitlab.training.losses.torch.Tensor">Tensor</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The tensors of one batch of the training dataset, already on <code>config.DEVICE</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="implicitlab.training.losses.torch.nn.Module">Module</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The model being trained.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>torch.Tensor: The scalar loss of the batch, on which <code>backward()</code> is called.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.get_optimizer" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_optimizer</span><span class="p">(</span><span class="n">model</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Builds the optimizer described by <code>config.OPTIMIZER</code>, with learning rate <code>config.LEARNING_RATE</code>:</p>
+<ul>
+<li>"adam": <code>torch.optim.Adam</code>. Also used for unknown names.</li>
+<li>"sgd": <code>torch.optim.SGD</code> with momentum 0.9.</li>
+<li>"muon": Muon on weights of dimension &gt;= 2, and Adam (lr 5e-4) on biases and gains. Weight decay 0.01.</li>
+<li>"custom": no optimizer is built.</li>
+</ul>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="implicitlab.training.losses.torch.nn.Module">Module</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The model whose parameters are optimized.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>torch.optim.Optimizer: The optimizer, or None if <code>config.OPTIMIZER</code> is "custom".</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.set_test_data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">set_test_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Sets the test dataset, used by <code>evaluate_model</code> at the end of each epoch.
+Builds a data loader using <code>config.TEST_BATCH_SIZE</code> and <code>config.NUM_DATALOADER_WORKERS</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>data</code>
+            </td>
+            <td>
+                  <code><span title="torch.utils.data.TensorDataset">TensorDataset</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The test data.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="Exception">Exception</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if <code>data</code> is not a <code>torch.utils.data.TensorDataset</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.set_training_data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">set_training_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Sets the training dataset. Builds a data loader using <code>config.BATCH_SIZE</code> and <code>config.NUM_DATALOADER_WORKERS</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>data</code>
+            </td>
+            <td>
+                  <code><span title="torch.utils.data.TensorDataset">TensorDataset</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The training data.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>shuffle</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to shuffle the data at every epoch. Defaults to True.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="Exception">Exception</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if <code>data</code> is not a <code>torch.utils.data.TensorDataset</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.step_scheduler" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">step_scheduler</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Steps the learning rate scheduler, if any. Prints the new learning rate when it changes.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="implicitlab.training.trainers.base_trainer.Trainer.train" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">starting_epoch</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Runs the optimization loop for <code>config.N_EPOCHS</code> epochs.</p>
+<p>If some were added, callbacks are invoked during training:</p>
+<ul>
+<li><code>callOnBeginTrain</code> before the first epoch;</li>
+<li>for each epoch: <code>callOnBeginEpoch</code>, <code>callOnEndForward</code> after each batch, <code>callOnEndEpoch</code>,
+  then the scheduler is stepped and the model is evaluated on test data (<code>callOnEndTest</code>);</li>
+<li><code>callOnEndTrain</code> after the last epoch.</li>
+</ul>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="implicitlab.training.losses.torch.nn.Module">Module</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The model to train. It should already be on <code>config.DEVICE</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>starting_epoch</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Offset of the epoch counter. Used to resume a previous training. Defaults to 0.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="Exception">Exception</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if no training data was provided, or if <code>config.OPTIMIZER</code> is "custom" and <code>optimizer</code> was not set.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="implicitlab.training.trainers.regression.RegressionEikonalTrainer" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">RegressionEikonalTrainer</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">eikonal_weight</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="Trainer(config) (implicitlab.training.trainers.base_trainer.Trainer)" href="#implicitlab.training.trainers.base_trainer.Trainer">Trainer</a></code></p>
+
+
+
+        <p>A simple trainer that combines mean square error regression to distance values with an eikonal loss.</p>
+<p>The model is evaluated on a box [-1, 1]^d</p>
+
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>config</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="TrainingConfig(BATCH_SIZE=100, TEST_BATCH_SIZE=5000, N_EPOCHS=100, LEARNING_RATE=0.001, DEVICE='cpu', OPTIMIZER='Adam', NUM_DATALOADER_WORKERS=-1)
+
+  
+      dataclass
+   (implicitlab.training.trainers.base_trainer.TrainingConfig)" href="#implicitlab.training.trainers.base_trainer.TrainingConfig">TrainingConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The training hyperparameters.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>eikonal_weight</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>weigth associated with the eikonal loss. Defaults to 0.01.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.01</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="implicitlab.training.trainers.regression.SimpleRegressionTrainer" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">SimpleRegressionTrainer</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lossfun</span><span class="o">=</span><span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="Trainer(config) (implicitlab.training.trainers.base_trainer.Trainer)" href="#implicitlab.training.trainers.base_trainer.Trainer">Trainer</a></code></p>
+
+
+
+        <p>A simple trainer that performs regression between the output of a model and some ground truth values.</p>
+
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>config</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="TrainingConfig(BATCH_SIZE=100, TEST_BATCH_SIZE=5000, N_EPOCHS=100, LEARNING_RATE=0.001, DEVICE='cpu', OPTIMIZER='Adam', NUM_DATALOADER_WORKERS=-1)
+
+  
+      dataclass
+   (implicitlab.training.trainers.base_trainer.TrainingConfig)" href="#implicitlab.training.trainers.base_trainer.TrainingConfig">TrainingConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The training hyperparameters.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>lossfun</code>
+            </td>
+            <td>
+                  <code><span title="Callable">Callable</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the loss function to consider. Defaults is <code>torch.nn.functional.mse_loss</code></p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="torch.nn.functional.mse_loss">mse_loss</span></code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="implicitlab.training.trainers.implicit_surface.ImplicitSurfaceTrainer" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">ImplicitSurfaceTrainer</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="Trainer(config) (implicitlab.training.trainers.base_trainer.Trainer)" href="#implicitlab.training.trainers.base_trainer.Trainer">Trainer</a></code></p>
+
+
+
+        <p>Training a neural implicit to approximate a shape as its zero level set. The loss functions and hyperparameters are adapted from [1] and [2]. Given a neural network <span class="arithmatex">\(f\)</span>, The method optimizes for four loss functions:</p>
+<div class="arithmatex">\[\mathcal{L}_{\text{on}}[f]  = \int_M |f(x)| dx\]</div>
+<div class="arithmatex">\[\mathcal{L}_{\text{normal}}[f] = \int_M  ||\nabla f(x) - n(x)||\;dx\]</div>
+<div class="arithmatex">\[\mathcal{L}_{\text{eikonal}}[f] = \int_D (|| \nabla f(x)|| - 1)^2\;dx\]</div>
+<div class="arithmatex">\[\mathbb{L}_{\text{out}}[f] = \int_D \exp(-\rho\,|f(x)|)\;dx\]</div>
+<p>This trainer assumes that the dataset is made of (points, normals) pairs which are sampled <em>on</em> the shape, for the evaluation of $<span class="arithmatex">\(\mathcal{L}_{\text{on}}\)</span> and <span class="arithmatex">\(\mathcal{L}_{\text{normal}}\)</span>. The two other loss functions are evaluated for every batch at random positions in a [-1.5, 1.5]^d box.</p>
+
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>The <code>forward_test_batch</code> method is not implemented and does nothing.</p>
+</details>
+
+<details class="references" open>
+  <summary>References</summary>
+  <p>[1] <em>Implicit Neural Representations with Periodic Activation Functions</em>, Sitzmann et al., 2020<br />
+[2] <em>Implicit Geometric Regularization for Learning Shapes</em>, Gropp et al., 2020  </p>
+</details>
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.implicit_surface.ImplicitSurfaceTrainer.rho">rho</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>value of rho in the outside loss. Defaults to 100.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="implicitlab.training.trainers.implicit_surface.ImplicitSurfaceTrainer.weights">weights</span></code></td>
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>dictionnary of weights that are associated with each loss function. Keys and default values are:
+- "on" : 700
+- "out" : 60
+- "normal": 10
+- "eikonal" : 5</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>config</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="TrainingConfig(BATCH_SIZE=100, TEST_BATCH_SIZE=5000, N_EPOCHS=100, LEARNING_RATE=0.001, DEVICE='cpu', OPTIMIZER='Adam', NUM_DATALOADER_WORKERS=-1)
+
+  
+      dataclass
+   (implicitlab.training.trainers.base_trainer.TrainingConfig)" href="#implicitlab.training.trainers.base_trainer.TrainingConfig">TrainingConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The training hyperparameters.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="implicitlab.training.trainers.hkr.hKRTrainer" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">hKRTrainer</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">lmbd</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">test_mode</span><span class="o">=</span><span class="s1">'sdf'</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="Trainer(config) (implicitlab.training.trainers.base_trainer.Trainer)" href="#implicitlab.training.trainers.base_trainer.Trainer">Trainer</a></code></p>
+
+
+
+        <p>Trainer minimizing the hinge-Kantorovitch-Rubinstein loss. For a Lipschitz model <span class="arithmatex">\(f\)</span> and some binary labels <span class="arithmatex">\(y(x) \in \{-1, 1\}\)</span>, the hKR loss is defined as:</p>
+<div class="arithmatex">\[\mathcal{L}_{hKR}(x) = -yf(x) + \lambda \max(0, m - yf(x)).\]</div>
+
+
+<details class="warning" open>
+  <summary>Warning</summary>
+  <p>This trainer only yields valid result when used on a Lipschitz architecture.</p>
+</details>
+
+<details class="references" open>
+  <summary>References</summary>
+  <p>[1] <em>Achieving robustness in classification using optimal transport with hinge regularization</em>, Serrurier et al, 2021<br />
+[2] <em>1-Lipschitz Neural Distance Fields</em>, Coiffier and Béthune, 2024</p>
+</details>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>config</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="TrainingConfig(BATCH_SIZE=100, TEST_BATCH_SIZE=5000, N_EPOCHS=100, LEARNING_RATE=0.001, DEVICE='cpu', OPTIMIZER='Adam', NUM_DATALOADER_WORKERS=-1)
+
+  
+      dataclass
+   (implicitlab.training.trainers.base_trainer.TrainingConfig)" href="#implicitlab.training.trainers.base_trainer.TrainingConfig">TrainingConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>training configuration hyperparameters.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>margin</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>margin (m) parameter for the hKR loss. Defaults to 1e-2.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.01</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>lmbd</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>lambda parameter of the hKR loss. Defaults to 100..</p>
+              </div>
+            </td>
+            <td>
+                  <code>100.0</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>test_mode</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>which loss to compute for test batches. Choices are [none, sdf, hkr]. Defaults to "sdf".</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;sdf&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="implicitlab.training.trainers.pretraining.SphereInitializeTrainer" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">SphereInitializeTrainer</span><span class="p">(</span><span class="n">n_batches</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="Trainer(config) (implicitlab.training.trainers.base_trainer.Trainer)" href="#implicitlab.training.trainers.base_trainer.Trainer">Trainer</a></code></p>
+
+
+
+        <p>Trainer used as an initialization step. Trains the neural network to approximate the SDF of a nD sphere</p>
+
+
+<details class="references" open>
+  <summary>References</summary>
+  <p>[1] SAL: Sign Agnostic Learning of Shapes From Raw Data, Atzmon and Lipman, 2020</p>
+</details>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>n_batches</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>number of training batches (and optimizer step) to perform.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>config</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="TrainingConfig(BATCH_SIZE=100, TEST_BATCH_SIZE=5000, N_EPOCHS=100, LEARNING_RATE=0.001, DEVICE='cpu', OPTIMIZER='Adam', NUM_DATALOADER_WORKERS=-1)
+
+  
+      dataclass
+   (implicitlab.training.trainers.base_trainer.TrainingConfig)" href="#implicitlab.training.trainers.base_trainer.TrainingConfig">TrainingConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>training hyperparameters.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Other Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>radius</code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>radius of the sphere to consider. Defaults to 1.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.sections", "navigation.indexes", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
