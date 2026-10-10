@@ -77,13 +77,14 @@ repo_name: GCoiffier/neural_implicit_lab
 nav:
   - Home: "index.md"
 
-  # - Tutorials: 
+  - Tutorials: 
   #   - "tutorial/preparing_dataset.md"
   #   - "tutorial/training_model.md"
   #   - "tutorial/geometrical_queries.md"
-  #   - "tutorial/full_example.md"
+    - "tutorial/full_example.md"
 
   - Documentation:
+    - "documentation/geometry.md"
     - "documentation/dataset_sampling.md"
     - "documentation/field_computations.md"
     - "documentation/nn_architectures.md"

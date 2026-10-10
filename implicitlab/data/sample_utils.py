@@ -1,6 +1,8 @@
 import numpy as np
 import mouette as M
 
+from geometry import GeometryType
+
 def sample_points_and_normals2D(polyline, n_pts):
     sampled_pts = np.zeros((n_pts, 2))
     lengths = M.attributes.edge_length(polyline, persistent=False).as_array()
@@ -35,7 +37,38 @@ def sample_points_and_normals2D(polyline, n_pts):
 
 
 def sample_unit_disk(n_pts):
+    """Samples n_pts points uniformly inside the disk of center 0 and radius 1
+
+    Args:
+        n_pts (int): number of points to sample 
+
+    Returns:
+        np.ndarray: array of size (n_pts, 2) containing the sampled points.
+    """
     r = np.sqrt(np.random.random(n_pts))
     theta = 2*np.pi*np.random.random(n_pts)
     pts = np.vstack([r*np.cos(theta), r*np.sin(theta)]).T
     return pts
+
+
+def sample_geometry_with_normals(geometry, n_pts: int):
+    """Samples a geometrical object uniformly.
+
+    Args:
+        geometry (mouette.mesh.Mesh): the geometry to sample from
+        n_pts (int): number of points to sample
+
+    Returns:
+        np.ndarray: array of size (n_pts, dim) containing the points
+        np.ndarray: array of size (n_pts, dim) containing the normals
+ 
+    Raises:
+        Exception: fails if the provided geometry is not a 3D surface mesh or a 2D polyline
+    """
+    if geometry.type not in (GeometryType.SURFACE_MESH_3D, GeometryType.POLYLINE_2D):
+        raise Exception(f"Geometry Type {geometry.type} is not supported. Please provide a 3D surface mesh or a 2D polyline.")
+    if geometry.dim == 3:
+        points, normals = M.sampling.sample_surface(geometry, n_pts, return_normals=True)
+    elif geometry.dim == 2:
+        points, normals = sample_points_and_normals2D(geometry, n_pts)
+    return points, normals
