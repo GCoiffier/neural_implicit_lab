@@ -36,13 +36,9 @@ M.mesh.save(pc, "output/train_pts.geogram_ascii")
 
 # setup model
 model = torch.nn.Sequential(
-    # IL.nn.encodings.HalfPlaneEncoding(geometry, 1000),
-    # IL.nn.encodings.PointDistanceEncoding(geometry, 1000),
-    IL.nn.encodings.RandomFourierEncoding(geometry, 1000),
-    # IL.nn.encodings.GaussianEncoding(geometry, 1000),
+    IL.nn.encodings.RandomFourierEncoding(geometry.dim, 1000),
     IL.nn.MultiLayerPerceptron(1000, 128, 5)
 ).to(DEVICE)
-# model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 5).to(DEVICE)
 
 print(f"{IL.nn.count_parameters(model)} parameters")
 

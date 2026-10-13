@@ -109,11 +109,12 @@ def extract_boundary_polyline_from_2D_mesh(geometry):
     Returns:
         geometry (mouette.mesh.Mesh): The extracted boundary polyline if the input geometry type was SURFACE_MESH_2D. Otherwise, returns the unmodified input geometry.
     """
-    if geometry.type != GeometryType.SURFACE_MESH_2D:
+    if geometry.geom_type != GeometryType.SURFACE_MESH_2D:
         return geometry
-    geom = M.processing.extract_boundary_of_surface(geom)[0]
-    geom.geom_type = GeometryType.POLYLINE_2D
-    geom.dim = 2
+    boundary_curve = M.processing.extract_boundary_of_surface(geometry)[0]
+    boundary_curve.geom_type = GeometryType.POLYLINE_2D
+    boundary_curve.dim = 2
+    return boundary_curve
 
 
 def load_geometry(file_path : str):

@@ -1,4 +1,3 @@
-from ..nn import save_model
 from ..data import make_tensor_dataset, PointSampler
 from ..queries.visualize import render_sdf_2d, reconstruct_surface_marching_cubes
 import mouette as M
@@ -42,7 +41,7 @@ class LoggerCB(Callback):
             writer = csv.DictWriter(csvfile, fieldnames=self.logged.keys())
             writer.writeheader()
 
-    def callOnEndEpoch(self, trainer, model):
+    def callOnEndEpoch(self, trainer, model: "ImplicitModel"):
         self.logged.update({"epoch" :  trainer.metrics["epoch"]})
         self.logged.update({"time" :  trainer.metrics["epoch_time"]})
         self.logged.update({"train_loss" : trainer.metrics["train_loss"]})
@@ -51,7 +50,7 @@ class LoggerCB(Callback):
             # no test_data_loader means that callOnEndTest will not be called.
             self._write_log()
 
-    def callOnEndTest(self, trainer, model):
+    def callOnEndTest(self, trainer, model: "ImplicitModel"):
         self.logged.update({"test_loss" : trainer.metrics["test_loss"]})
         print(f"Test loss after epoch {trainer.metrics['epoch']} : {trainer.metrics['test_loss']}\n")
         self._write_log()
@@ -75,7 +74,7 @@ class CheckpointCB(Callback):
         self.freq: int = freq
         self.only_weights: bool = only_weights
 
-    def callOnEndEpoch(self, trainer, model):
+    def callOnEndEpoch(self, trainer, model: "ImplicitModel"):
         epoch = trainer.metrics["epoch"]
         if epoch!=0 and epoch%self.freq==0:
             name = f"{'weights' if self.only_weights else 'model'}_e{epoch}.pt"
@@ -83,7 +82,7 @@ class CheckpointCB(Callback):
             if self.only_weights:
                 torch.save(model.state_dict(), path)
             else:
-                save_model(model, path)
+                model.save(path)
 
 class Render2DCB(Callback):
     """
@@ -144,24 +143,25 @@ class Render2DCB(Callback):
 class MarchingCubeCB(Callback):
     """A Callback that makes a snapshot of a 3D neural implicit by using the marching cubes algorithm to extract some level sets."""
 
-    def __init__(self, save_folder: str, freq: int, domain: M.geometry.AABB = None, res: int = 100, iso=0, **kwargs):
+    def __init__(self, save_folder: str, freq: int, domain: M.geometry.AABB = None, res: int = 256, iso=0, **kwargs):
         """
         Args:
             save_folder (str): output folder into which the images are saved
             freq (int): frequency (in terms of number of epochs) at which a snapshot is taken
-            domain (M.geometry.AABB, optional): AABB domain over which the grid is defined. If not provided, the default domain will be [-1.2 ; 1.2]^3. Defaults to None.
-            res (int, optional): Grid resolution for marching cubes. res^3 values will be sampled from the neural model. Defaults to 100.
+            domain (M.geometry.AABB, optional): AABB domain over which the grid is defined. If not provided, the default domain will be [-1.1 ; 1.1]^3. Defaults to None.
+            res (int, optional): Grid resolution for marching cubes. res^3 values will be sampled from the neural model. Defaults to 256.
             iso (int, optional): Which iso-level will be reconstructed. Several levels can be provided in a list. Defaults to 0.
             prefix (str, optional): prefix for the name of the saved file. The name will have the form <prefix>_e<n_epoch>_iso<iso_value>. Defaults to the empty string.
         
         Keyword Args:
             prefix (str, optional): prefix for the name of the saved file. The name will have the form <prefix>_e<n_epoch>_iso<iso_value>. Defaults to the empty string.
+            full_precision (bool, optional): by default, the computation is done over torch.float16 for faster inference. This flag enables computation in full torch.float32 precision. Defaults to False.
         """
         super().__init__()
         self.save_folder = save_folder
         self.freq = freq
         if domain is None:
-            self.domain = M.geometry.AABB([-1.2]*3, [1.2]*3)
+            self.domain = M.geometry.AABB([-1.1]*3, [1.1]*3)
         else:
             self.domain = domain
         self.res = res
@@ -172,6 +172,7 @@ class MarchingCubeCB(Callback):
         self.prefix = kwargs.get("prefix", "")
         if len(self.prefix)>0 and self.prefix[-1]!='_':
             self.prefix += '_'
+        self.full_precision = kwargs.get("full_precision", False)
     
     def callOnEndEpoch(self, trainer, model):
         epoch = trainer.metrics["epoch"]
@@ -186,7 +187,8 @@ class MarchingCubeCB(Callback):
                 self.res, 
                 trainer.config.TEST_BATCH_SIZE,
                 use_tqdm=True,
-                num_workers=trainer.config.NUM_DATALOADER_WORKERS)
+                full_precision = self.full_precision
+            )
             for (n,off),mesh in iso_surfaces.items():
                 M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_iso{round(1000*off)}.obj"))
                 # M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_n{n:02d}_iso{round(1000*off)}.obj"))

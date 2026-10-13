@@ -63,6 +63,11 @@ def gradient_descent(
     max_steps : int = 100
 ) -> np.ndarray :
     """Performs steps of gradient descent of the given neural implicit function.
+    
+    Given a point $x$ and a neural implicit $f$, this function will iterate:
+    $$x \\leftarrow x - \\nabla f(x)$$
+
+    until `max_steps` is reached.
 
     Args:
         query_pts (np.ndarray): starting points.

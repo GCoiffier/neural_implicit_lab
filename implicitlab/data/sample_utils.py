@@ -1,7 +1,7 @@
 import numpy as np
 import mouette as M
 
-from geometry import GeometryType
+from .geometry import GeometryType
 
 def sample_points_and_normals2D(polyline, n_pts):
     sampled_pts = np.zeros((n_pts, 2))

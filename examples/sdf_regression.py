@@ -50,12 +50,12 @@ print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
 config = TrainingConfig(
-    BATCH_SIZE=10_000,
-    TEST_BATCH_SIZE = 10000,
-    N_EPOCHS=500,
-    LEARNING_RATE=3e-4,
-    DEVICE=DEVICE,
-    OPTIMIZER="adam"
+    BATCH_SIZE = 10_000,
+    TEST_BATCH_SIZE = 50_000,
+    N_EPOCHS = 300,
+    LEARNING_RATE = 5e-4,
+    DEVICE = DEVICE,
+    OPTIMIZER = "adam",
 )
 
 trainer = IL.training.SimpleRegressionTrainer(config, lossfun=torch.nn.MSELoss())
@@ -71,5 +71,3 @@ elif geometry.dim == 3:
 trainer.set_training_data(train_data)
 trainer.set_test_data(test_data)
 trainer.train(model)
-
-IL.nn.save_model(model, os.path.join(OUTPUT_DIR, "model.pt"))

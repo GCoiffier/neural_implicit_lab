@@ -4,7 +4,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 from ..losses import *
 from ..callbacks import Callback
-from ..optimizers import SingleDeviceMuonWithAuxAdam, AdaBound, AdaBoundW
+from ..optimizers import SingleDeviceMuonWithAuxAdam
 
 import time
 from dataclasses import dataclass
@@ -18,7 +18,7 @@ class TrainingConfig:
 
     Attributes:
         BATCH_SIZE (int): Number of samples per batch in the training data loader. Defaults to 100.
-        TEST_BATCH_SIZE (int): Number of samples per batch in the test data loader. Defaults to 5000.
+        TEST_BATCH_SIZE (int): Number of samples per batch in the test data loader. Defaults to 2**15 (=32768).
         N_EPOCHS (int): Number of passes over the training dataset. Defaults to 100.
         LEARNING_RATE (float): Learning rate given to the optimizer. Defaults to 1e-3.
         DEVICE (str): Torch device on which training runs ("cpu", "cuda", ...). A warning is emitted if
@@ -27,10 +27,10 @@ class TrainingConfig:
         NUM_DATALOADER_WORKERS (int): Number of worker processes for the train data loaders. -1 means `torch.get_num_threads()`. Defaults to -1.
     """
     BATCH_SIZE: int = 100
-    TEST_BATCH_SIZE: int = 5000
+    TEST_BATCH_SIZE: int = 2**15
     N_EPOCHS : int = 100
     LEARNING_RATE : float = 1e-3
-    DEVICE : str = "cpu"
+    DEVICE : torch.device = "cpu"
     OPTIMIZER : str = "Adam"
     NUM_DATALOADER_WORKERS: int = -1
 

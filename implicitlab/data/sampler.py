@@ -86,7 +86,4 @@ class PointSampler:
         if self.geom_object.dim==2:
             self.points = self.points[:,:2]
         
-        self.fields = tuple(field.compute_on(self.points) for field in self.field_generators)
-        if not self.fields:
-            return self.points       
-        return self.points, self.fields
+        return self.points       

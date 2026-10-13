@@ -20,6 +20,10 @@ This page lists the neural network models and components that are available in t
     options:
         heading_level: 3 -->
 
+:::implicitlab.nn.tailed_mlp
+    options:
+        heading_level: 3
+
 :::implicitlab.nn.quanet
     options:
         heading_level: 3
@@ -62,3 +66,10 @@ model = torch.nn.Sequential(
 :::implicitlab.nn.utils
     options:
         heading_level: 3
+
+
+:::implicitlab.nn.lipschitz
+    options:
+        heading_level: 3
+        members:
+            - "parameter_singular_values"

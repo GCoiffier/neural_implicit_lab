@@ -11,6 +11,7 @@ from implicitlab.training import TrainingConfig, hKRTrainer, callbacks
 OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 geometry = IL.load_geometry(sys.argv[1])
+geometry = IL.data.extract_boundary_polyline_from_2D_mesh(geometry)
 print(geometry.geom_type)
 
 DEVICE = IL.utils.get_device()
@@ -25,7 +26,7 @@ train_sampling_strat = IL.sampling_strategies.CombinedStrategy([
     IL.sampling_strategies.NearGeometryGaussian(geometry, 0.02)
 ], [1., 9.])
 train_sampler = PointSampler(geometry, train_sampling_strat, train_field)
-points, val = train_sampler.sample(20_000 if geometry.dim==2 else 300_000)
+points, val = train_sampler.sample(30_000 if geometry.dim==2 else 300_000)
 
 # Balance the dataset : as many inside points that there are outside points
 points_pos = points[val>0, :]
@@ -39,7 +40,7 @@ elif n_pos>n_neg:
     points_pos = points_pos[:n_neg, :]
 points = np.concatenate((points_pos, points_neg))
 val = np.concatenate((np.ones(min(n_pos,n_neg)), -np.ones(min(n_pos,n_neg))))
-train_data = IL.data.make_tensor_dataset((points, val), DEVICE) 
+train_data = IL.data.make_tensor_dataset((points, val)) 
 
 pc = M.mesh.from_arrays(points)
 pc.vertices.register_array_as_attribute("occ", val)
@@ -51,7 +52,7 @@ test_field = IL.fields.Distance(geometry, signed=True)
 test_sampling_strat = IL.sampling_strategies.UniformBox(geometry)
 test_sampler = PointSampler(geometry, test_sampling_strat, test_field)
 test_pts, test_val = test_sampler.sample(10_000)
-test_data = IL.data.make_tensor_dataset((test_pts, test_val), DEVICE)
+test_data = IL.data.make_tensor_dataset((test_pts, test_val))
 
 
 ###### Training
@@ -78,10 +79,10 @@ class UpdateHkrRegulCB(callbacks.Callback):
 MARGIN = 0.01
 
 trainer = hKRTrainer(TrainingConfig(
-    BATCH_SIZE=1000,
-    TEST_BATCH_SIZE=5000,
+    BATCH_SIZE=10_000,
+    TEST_BATCH_SIZE=50_000,
     N_EPOCHS=500,
-    LEARNING_RATE=1e-4,
+    LEARNING_RATE=3e-4,
     DEVICE=DEVICE,
     OPTIMIZER="muon"), 
     margin=MARGIN, 
@@ -97,11 +98,10 @@ trainer.add_callbacks(
 if geometry.dim == 2:
     trainer.add_callbacks(callbacks.Render2DCB(OUTPUT_DIR, 100))
 elif geometry.dim == 3:
-    trainer.add_callbacks(callbacks.MarchingCubeCB(OUTPUT_DIR, 100, res=200, iso=[-MARGIN/2, 0]))
+    trainer.add_callbacks(callbacks.MarchingCubeCB(OUTPUT_DIR, 100, res=256, iso=[-MARGIN/2, 0]))
 
 trainer.set_training_data(train_data)
 trainer.set_test_data(test_data)
 trainer.train(model)
 
-IL.nn.save_model(model, os.path.join(OUTPUT_DIR, "model.pt"))
-torch.save(model.state_dict(), os.path.join(OUTPUT_DIR, "weights.pt"))
+model.save(os.path.join(OUTPUT_DIR, "model.inr"))

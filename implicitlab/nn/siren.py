@@ -3,6 +3,10 @@ from torch import nn
 import numpy as np
 
 class SinusActivation(nn.Module):
+    """
+    References:
+        _Implicit Neural Representations with Periodic Activation Functions_, Sitzmann et al., 2020
+    """
     def __init__(self, w0 = 6.):
         super().__init__()
         self.w0 = w0
@@ -10,13 +14,45 @@ class SinusActivation(nn.Module):
     def forward(self, x):
         return torch.sin(self.w0*x)   
 
-    
+
+class FINERActivation(nn.Module):
+    """
+    References:
+        _FINER: Flexible spectral-bias tuning in Implicit NEural Representation by Variable-periodic Activation Functions_, Liu et al., 2023
+    """
+    def __init__(self, w0=6.):
+        super().__init__()
+        self.w0 = w0
+
+    def forward(self, x):
+        a = torch.abs(x) + 1
+        return torch.sin(self.w0*a*x)
+
+
+class LearnableSpectralActivation(nn.Module):
+    """
+    References:
+        _Learnable Spectral Activations_, Shor et al., 2026
+    """
+    def __init__(self, harmonics=32, init_scale=1e-3, residual=True):
+        super().__init__()
+        self.harmonics = int(harmonics)
+        self.residual = bool(residual)
+        self.coeffs = nn.Parameter(init_scale * torch.randn(self.harmonics))
+
+    def forward(self, x):
+        y = 0.0
+        for i in range(self.harmonics):
+            y = y + self.coeffs[i] * torch.sin(2.0 * 3.141592654 * (i + 1) * x)
+        return x + y if self.residual else y
+
+
 class SirenLayer(nn.Module):
     def __init__(self, 
         dim_in:int, 
         dim_out:int, 
         w0 : float = 30., 
-        activation:bool=True,
+        activation:str = "sine",
         is_first_layer=False,
         residual:bool=False,
     ):
@@ -29,7 +65,12 @@ class SirenLayer(nn.Module):
             self.weight.uniform_(-stdv,stdv)
             self.bias.uniform_(-stdv, stdv)
 
-        self.activation = SinusActivation(w0) if activation else nn.Identity()
+        self.activation = {
+            "siren" : SinusActivation(w0),
+            "finer" : FINERActivation(w0),
+            "lsa" : LearnableSpectralActivation(residual=residual),
+            "id" : nn.Identity()
+        }.get(activation.lower(), nn.Identity())
         self.residual = residual if dim_in==dim_out else False
 
     def forward(self, x):
@@ -147,7 +188,8 @@ def SirenNet(
     w0: float = 6.,
     w0_first_layer : float = 30.,
     residual: bool = False,
-    init_type="siren"
+    init_type="siren",
+    activation_type="siren",
     ):
     """
     
@@ -161,18 +203,34 @@ def SirenNet(
         w0 (float, optional): Frequency of the activation function. Defaults to 6.
         w0_first_layer (float, optional): Frequency of the activation function in the first layer. Defaults to 30.
         residual (bool, optional): Whether to include residual connections between each layer. Defaults to False.
+        init_type (str, optional): Initialization scheme to consider for the network's weights. Choices are:
+            - "siren": the original SIREN initialization scheme [1]  
+            - "geometric": geometric initialization scheme [4]  
+            - "mfgi": multi-frequency geometric initialization scheme [5]  
+            - "winner": initialization proposed by WINNER [6]  
+            Defaults to "siren".
+        activation_type (str, optional): Which activation to choose for the network (case insensitive). Choices are:
+            - "siren": the original SIREN activation [1]
+            - "finer": activation proposed by FINER [2]  
+            - "lsa": learnable spectral activation [3]  
+            - "id" : identity (no activation)  
+            Defaults to "sine".
     
     References:
-        _Implicit Neural Representations with Periodic Activation Functions_, Sitzmann et al., 2020
+        [1] _Implicit Neural Representations with Periodic Activation Functions_, Sitzmann et al., 2020  
+        [2] _FINER: Flexible spectral-bias tuning in Implicit NEural Representation by Variable-periodic Activation Functions_, Liu et al., 2023  
+        [3] _Learnable Spectral Activations_, Shor et al., 2026
+        [4] _DiGS : Divergence guided shape implicit neural representation for unoriented  point clouds_, Y.Ben-Shabat et al., 2022  
+        [5] _Improving Accuracy and Efficiency of Implicit Neural Representations: Making SIREN a WINNER_, H.Chandravamsi et al., 2026
     """
     layers = []
     # First dim_in -> dim_hidden layer
-    layers.append(SirenLayer(dim_in, dim_hidden, w0_first_layer, is_first_layer=True))
+    layers.append(SirenLayer(dim_in, dim_hidden, w0_first_layer, is_first_layer=True, activation=activation_type))
     # Intermediate dim_hidden -> dim_hidden layers
     for _ in range(n_layers-1):
-        layers.append(SirenLayer(dim_hidden, dim_hidden, w0, residual=residual))
+        layers.append(SirenLayer(dim_hidden, dim_hidden, w0, residual=residual, activation=activation_type))
     # last dim_hidden->1 layer has no activation
-    layers.append(SirenLayer(dim_in = dim_hidden, dim_out = dim_out, w0 = w0, activation = False))
+    layers.append(SirenLayer(dim_in = dim_hidden, dim_out = dim_out, w0 = w0, activation="id"))
     model = nn.Sequential(*layers)
 
     # Apply initialization
@@ -180,8 +238,6 @@ def SirenNet(
         initializer = SirenGeometricInitializer(init_type.lower())
         initializer.apply(model)
 
-    model.id = "SIREN"
-    model.meta = [dim_in, dim_hidden, n_layers]
     return model
 
 

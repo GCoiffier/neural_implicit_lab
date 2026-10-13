@@ -1,12 +1,12 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-import mouette as M
 import numpy as np
 
-from ..data.sample_utils import sample_points_and_normals2D
+from .implicit_model import ImplicitModel
 
-class RandomFourierEncoding(nn.Module):
+
+class RandomFourierEncoding(ImplicitModel):
 
     def __init__(self, input_dim: int, encoded_dim: int, stdv: float = 1.):
         """Encodes a given position into different frequencies of trigonometric functions :
@@ -38,8 +38,8 @@ class RandomFourierEncoding(nn.Module):
         return torch.cat((torch.cos(vp), torch.sin(vp)), dim=-1)
 
 
-class HyperplaneEncoding(nn.Module):
-    def __init__(self, geometry, n_points: int):
+class HyperplaneEncoding(ImplicitModel):
+    def __init__(self, points : torch.Tensor, normals : torch.Tensor, trainable:bool=False):
         """Encoding that considers points with normals sampled on the geometry and applies the signed distance to each corresponding hyperplanes:
 
         $$x \\mapsto \\langle n, x-p \\rangle$$
@@ -47,52 +47,42 @@ class HyperplaneEncoding(nn.Module):
         where $(p,n)$ are points and normals.
 
         Args:
-            geometry (mouette.Mesh): the input geometry.
-            n_points (int): number of considered (point,normal) pairs.
+            points (torch.Tensor): the points to consider
+            normals (torch.Tensor): the normals associated with each point. Will be normalized.
+            trainable (bool, optional): whether the points and normals can be trained as model parameters. Defaults to False.
         """
         super().__init__()
-        dim_in = geometry.dim
+        normals = torch.as_tensor(normals, dtype=torch.float32)
+        normals = F.normalize(normals, dim=1) # normals should be of unit norm
+        self.normals = nn.Parameter(normals, requires_grad=trainable)
+        self.points = nn.Parameter(torch.as_tensor(points, dtype=torch.float32), requires_grad=trainable)
         
-        if dim_in==2:
-            points, normals = sample_points_and_normals2D(geometry, n_points)
-        else:
-            points,normals = M.sampling.sample_surface(geometry, n_points, return_normals=True)
-        normals = torch.FloatTensor(normals)
-        normals = nn.functional.normalize(normals, dim=1) # normals should be of unit norm
-        self.normals = nn.Parameter(normals, requires_grad=False)
-        self.points = nn.Parameter(torch.FloatTensor(points), requires_grad=False)
+        # Make the save config point to the parameter Tensors and not the input, 
+        # so that tensors are not duplicated between config and state_dict when saving on the disk
+        self._config["points"] = self.points.detach()
+        self._config["normals"] = self.normals.detach() 
 
     def forward(self, x):
         c = torch.unsqueeze(x, 1) - self.points
-        return torch.sum(nn.functional.normalize(self.normals, dim=1) * c, dim=-1) 
+        return torch.sum(F.normalize(self.normals, dim=1) * c, dim=-1) 
     
 
 
-
-class PointDistanceEncoding(nn.Module):
-    def __init__(self, geometry, n_points: int, sample_on_surface:bool = True):
+class PointDistanceEncoding(ImplicitModel):
+    def __init__(self, points: torch.Tensor, trainable:bool = False):
         """Encodes the input point x with its l2 distance to sampled points $p$ in space:
 
         $$x \\mapsto ||x-p||_2$$
 
         Args:
-            geometry (mouette.Mesh): the input geometry.
-            n_points (int): number of considered points.
-            sample_on_surface (bool, optional): whether to sample the points on the geometry's surface, or at random in space. Defaults to True.
+            points (torch.Tensor): The points consider for encoding
+            trainable (bool, optional): whether the points can be trained as model parameters. Defaults to False.
         """
         super().__init__()
-        dim_in = geometry.dim
-        
-        if sample_on_surface:
-            if dim_in == 2:
-                points = M.sampling.sample_polyline(geometry, n_points)[:,:2]
-            elif dim_in == 3:
-                points = M.sampling.sample_surface(geometry, n_points)
-
-        else:
-            domain = M.geometry.AABB([-1.2]*dim_in, [1.2]*dim_in)
-            points = M.sampling.sample_AABB(domain, n_points)
-        self.points = nn.Parameter(torch.FloatTensor(points), requires_grad=False)
+        self.points = nn.Parameter(torch.as_tensor(points, dtype=torch.float32), requires_grad=trainable)
+        # Make the save config point to the parameter Tensors and not the input, 
+        # so that tensors are not duplicated between config and state_dict when saving on the disk
+        self._config["points"] = self.points.detach()
 
     def forward(self, x):
         c = torch.unsqueeze(x, 1) - self.points
@@ -100,18 +90,18 @@ class PointDistanceEncoding(nn.Module):
 
 
 class GaussianEncoding(PointDistanceEncoding):
-    def __init__(self, geometry, n_points: int, sample_on_surface:bool = True, stdv=1.):
+    def __init__(self,  points: torch.Tensor, stdv:float = 1., trainable:bool = False):
         """ Variant of the PointDistanceEncoding where distance are then fed into a Gaussian kernel:
 
         $$x \\mapsto e^{ - \\frac{||x-p||^2}{\\sigma}}$$
 
         Args:
-            geometry (mouette.Mesh): the input geometry.
-            n_points (int): number of considered points.
-            sample_on_surface (bool, optional): whether to sample the points on the geometry's surface, or at random in space. Defaults to True.
+            points (torch.Tensor): The points consider for encoding
+            stdv (float): standard deviation of the Gaussian kernel. Defaults to 1.
+            trainable (bool, optional): whether the points can be trained as model parameters. Defaults to False.
         """
                 
-        super().__init__(geometry, n_points, sample_on_surface)
+        super().__init__(points, trainable)
         self.stdv = stdv
 
     def forward(self,x):

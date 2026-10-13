@@ -30,44 +30,47 @@ def get_model_dim(model: torch.nn.Module, device):
 
 def forward_in_batches(
         model : torch.nn.Module, 
-        inputs : np.ndarray, 
-        device : str, 
+        inputs : torch.Tensor, 
+        device : torch.device, 
         compute_grad : bool = False, 
-        batch_size : int = 5_000,
+        batch_size : int = 2**16,
         use_tqdm : bool = False,
-        num_workers : int = -1) -> np.ndarray:
+        full_precision : bool = True
+    ) -> torch.Tensor:
     """
     Runs the model `model` onto the `inputs` array and returns the computed output. As the input array may be large, the function splits it in batches that are fed one after the other to the model.
 
     Args:
         model (torch.nn.Module): the pytorch model to run
-        inputs (numpy.ndarray|torch.Tensor): Input array to be fed to the model 
-        device (str): which device the computation should be run on.
+        inputs (torch.Tensor): Input array to be fed to the model. Also supports numpy array, which will be converted automatically.
+        device (torch.device): which device the computation should be run on.
         compute_grad (bool, optional): whether to also compute and returns the gradients of the model at the input points. Defaults to False.
         batch_size (int, optional): Batch size for the forward computation. Defaults to 5_000.
         use_tqdm (bool, optional): Whether to display a tqdm progress bar during computation. Defaults to False.
-        num_workers (int, optional): how many workers to use for data loading. See the num_workers kwarg of the DataLoader class. Defaults to -1, which uses torch.get_num_thread().
+        full_precision (bool, optional): Whether to compute with torch.float16 (faster) or torch.float32 (accurate). Defaults to True.
 
     Returns:
-        numpy.ndarray: the output `model(inputs)`. If `compute_grad` is set to True, also returns the gradients as another `numpy.ndarray` 
+        torch.Tensor: the output `model(inputs)`. If `compute_grad` is set to True, also returns the gradients as another tensor.
     """
-    n_workers = num_workers if num_workers!=-1 else torch.get_num_threads()
-    inputs = torch.Tensor(inputs)
-    inputs = DataLoader(inputs, batch_size=batch_size, num_workers=n_workers)
-    outputs = []
-    grads = []
-    inputs = tqdm(inputs, total=len(inputs)) if use_tqdm else inputs
-    if compute_grad:
-        for batch in inputs:
-            batch.requires_grad = True
-            v_batch = model(batch.to(device))
-            torch.sum(v_batch).backward()
-            grads.append(batch.grad.detach().cpu())
-            outputs.append(v_batch.detach().cpu())
-        return torch.cat(outputs).numpy(), torch.cat(grads).numpy()
-    else:
-        # with torch.inference_mode():
-        for batch in inputs:
-            v_batch = model(batch.to(device))
-            outputs.append(v_batch.detach().cpu())
-        return torch.cat(outputs).numpy()
+    inputs = torch.as_tensor(inputs, dtype=torch.float32, device=device)
+    n_inputs = inputs.shape[0]
+    batch_starts = range(0, n_inputs, batch_size)
+    if use_tqdm: batch_starts = tqdm(batch_starts, total=len(batch_starts))
+    outputs = None # will be created on the fly since its shape is unknown at first
+    grads = torch.empty_like(inputs) if compute_grad else None
+    grad_context = torch.enable_grad() if compute_grad else torch.no_grad()
+
+    amp_dtype = torch.float16 if device.type == "cuda" else torch.bfloat16
+    with grad_context, torch.autocast(device.type, dtype=amp_dtype, enabled= not full_precision):
+        for i in batch_starts:
+            batch = inputs[i:i+batch_size]
+            if compute_grad:
+                batch.requires_grad = True
+            v_batch = model(batch)
+            if compute_grad:
+                grads[i:i+batch_size] = torch.autograd.grad(v_batch.sum(), batch)[0]
+                v_batch = v_batch.detach()
+            if outputs is None:
+                outputs = torch.empty((n_inputs, *v_batch.shape[1:]), dtype=torch.float32, device=device)
+            outputs[i:i+batch_size] = v_batch
+    return (outputs, grads) if compute_grad else outputs

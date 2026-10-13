@@ -4,44 +4,49 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from deel import torchlip
+from .implicit_model import ImplicitModel
 
 #######################################################################################################################################
 
-def DenseLipBjorck(
-    dim_in: float,
-    dim_hidden: float,
-    n_layers: int,
-    dim_out: int = 1,
-    group_sort_size: int = 2, 
-    bias: bool = True,
-    k_coeff_lip: float=1.
-):
-    """
-    A Lipschitz neural architecture based on Björck's orthonormalization. The implementation is based on the `SpectralLinear` layer of the deel-torchlip library.
-
-    Args:
-        dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
-        dim_hidden (int): dimension of the hidden layers.
-        n_layers (int): number of hidden layers.
-        dim_out (int, optional): dimension of the output layers. Defaults to 1.
-        group_sort_size (int, optional): Size of the GroupSort activation function. If set to zero, the activation will be a FullSort. Defaults to 2 (minimum).
-        bias (bool, optional): whether to include bias vectors in the layers. Defaults to True.
-        k_coeff_lip (float, optional): Lipschitz constant of the network. Defaults to 1.
+class DenseLipBjorck(ImplicitModel):
+    """A Lipschitz neural architecture based on Björck's orthonormalization. The implementation is based on the `SpectralLinear` layer of the deel-torchlip library.
 
     References:
-        - _Sorting out Lipschitz function approximation_, Anil et al., 2019
-        - [https://github.com/deel-ai/deel-torchlip](https://github.com/deel-ai/deel-torchlip)
+        - _Sorting out Lipschitz function approximation_, Anil et al., 2019  
+        - [https://github.com/deel-ai/deel-torchlip](https://github.com/deel-ai/deel-torchlip)  
     """
-    layers = []
-    activation = torchlip.FullSort if group_sort_size == 0 else lambda : torchlip.GroupSort(group_sort_size)
-    layers.append(torchlip.SpectralLinear(dim_in, dim_hidden, bias=bias))
-    layers.append(activation())
-    for _ in range(n_layers-1):
-        layers.append(torchlip.SpectralLinear(dim_hidden, dim_hidden, bias=bias))
+    def __init__(self,
+        dim_in: float,
+        dim_hidden: float,
+        n_layers: int,
+        dim_out: int = 1,
+        group_sort_size: int = 2, 
+        bias: bool = True,
+        k_coeff_lip: float=1.
+    ): 
+        """
+        Args:
+            dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
+            dim_hidden (int): dimension of the hidden layers.
+            n_layers (int): number of hidden layers.
+            dim_out (int, optional): dimension of the output layers. Defaults to 1.
+            group_sort_size (int, optional): Size of the GroupSort activation function. If set to zero, the activation will be a FullSort. Defaults to 2 (minimum).
+            bias (bool, optional): whether to include bias vectors in the layers. Defaults to True.
+            k_coeff_lip (float, optional): Lipschitz constant of the network. Defaults to 1.
+        """
+        super().__init__()
+        layers = []
+        activation = torchlip.FullSort if group_sort_size == 0 else lambda : torchlip.GroupSort(group_sort_size)
+        layers.append(torchlip.SpectralLinear(dim_in, dim_hidden, bias=bias))
         layers.append(activation())
-    layers.append(torchlip.FrobeniusLinear(dim_hidden, dim_out, bias=bias))
-    model = torchlip.Sequential(*layers, k_coef_lip=k_coeff_lip)
-    return model
+        for _ in range(n_layers-1):
+            layers.append(torchlip.SpectralLinear(dim_hidden, dim_hidden, bias=bias))
+            layers.append(activation())
+        layers.append(torchlip.FrobeniusLinear(dim_hidden, dim_out, bias=bias))
+        self.model = torchlip.Sequential(*layers, k_coef_lip=k_coeff_lip)
+
+    def forward(self, x):
+        return self.model(x)
 
 #######################################################################################################################################
 
@@ -85,9 +90,8 @@ class SDPBasedLipschitzDenseLayer(nn.Module):
         return out
 
 
-def DenseLipSDP(dim_in: int, dim_hidden: int, n_layers: int, dim_out: int = 1, coeff_lip:float = 1., activation:nn.Module = nn.ReLU(), with_group_sort: bool = True):
-    """
-    Neural network made of _Semi-Definite Programming_ neural layers, as proposed by [1].
+class DenseLipSDP(ImplicitModel):
+    """Neural network made of _Semi-Definite Programming_ neural layers, as proposed by [1].
     Using a square matrix $W \\in \\mathbb{R}^{k \\times k}$, a bias vector $b \\in \\mathbb{R}^k$ and an additional vector $q \\in \\mathbb{R}^k$ as parameters, each layer is defined as:
 
     $$x \\mapsto x - 2WT^{-1} \\sigma(W^Tx + b)$$
@@ -96,30 +100,42 @@ def DenseLipSDP(dim_in: int, dim_hidden: int, n_layers: int, dim_out: int = 1, c
 
     $$ T_{ii} = \\sum_{j=1}^k \\left| (W^T W)_{ij} \\,\\exp(q_j - q_i) \\right|$$
 
-    and $\\sigma(x) = \\max(0, x)$ is the rectified linear unit (ReLU) function. 
-
-    Args:
-        dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
-        dim_hidden (int): dimension of the hidden layers.
-        n_layers (int): number of hidden layers.
-        dim_out (int, optional): dimension of the output layers. Defaults to 1.
-        coeff_lip (float, optional): Lipschitz constant. Defaults to 1.
-        activation (nn.Module, optional): Activation function. This architecture is proven to be 1-Lipschitz for ReLU, sigmoid and tanh. Defaults to ReLU.
-        with_group_sort (bool, optional): whether to add a GroupSort2 between each layer to slightly increase accuracy. Defaults to True
+    and $\\sigma(x) = \\max(0, x)$ is the rectified linear unit (ReLU) function.
 
     References:
         [1] _A Unified Algebraic Perspective on Lipschitz Neural Networks_, Araujo et al., 2023  
-        [2] https://github.com/deel-ai/orthogonium/blob/main/orthogonium/layers/conv/SLL/sll_layer.py
+        [2] [https://github.com/deel-ai/orthogonium/blob/main/orthogonium/layers/conv/SLL/sll_layer.py](https://github.com/deel-ai/orthogonium/blob/main/orthogonium/layers/conv/SLL/sll_layer.py)
     """
-    layers = []
-    layers.append(nn.ZeroPad1d((0, dim_hidden-dim_in)))
-    # layers.append(torchlip.FrobeniusLinear(dim_in, dim_hidden, disjoint_neurons=False))
-    for _ in range(n_layers):
-        layers.append(SDPBasedLipschitzDenseLayer(dim_hidden, activation=activation))
-        if with_group_sort: layers.append(torchlip.GroupSort2())
-    layers.append(torchlip.FrobeniusLinear(dim_hidden, dim_out, k_coef_lip=coeff_lip))
-    model = torch.nn.Sequential(*layers)
-    return model
+    def __init__(self, 
+        dim_in: int, 
+        dim_hidden: int, 
+        n_layers: int, 
+        dim_out: int = 1, 
+        coeff_lip:float = 1., 
+        activation:nn.Module = nn.ReLU(), 
+        with_group_sort: bool = True
+    ):
+        """
+        Args:
+            dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
+            dim_hidden (int): dimension of the hidden layers.
+            n_layers (int): number of hidden layers.
+            dim_out (int, optional): dimension of the output layers. Defaults to 1.
+            coeff_lip (float, optional): Lipschitz constant. Defaults to 1.
+            activation (nn.Module, optional): Activation function. This architecture is proven to be 1-Lipschitz for ReLU, sigmoid and tanh. Defaults to ReLU.
+            with_group_sort (bool, optional): whether to add a GroupSort2 between each layer to slightly increase accuracy. Defaults to True
+        """
+        super().__init__()
+        layers = []
+        layers.append(nn.ZeroPad1d((0, dim_hidden-dim_in)))
+        # layers.append(torchlip.FrobeniusLinear(dim_in, dim_hidden, disjoint_neurons=False))
+        for _ in range(n_layers):
+            layers.append(SDPBasedLipschitzDenseLayer(dim_hidden, activation=activation))
+            if with_group_sort: layers.append(torchlip.GroupSort2())
+        layers.append(torchlip.FrobeniusLinear(dim_hidden, dim_out, k_coef_lip=coeff_lip))
+        self.model = torch.nn.Sequential(*layers)
+
+    def forward(self, x): return self.model(x)
 
 #######################################################################################################################################
 
@@ -149,10 +165,8 @@ class AOLLipschitzDenseLayer(nn.Module):
         res = F.linear(self.t()*x, self.weight, self.bias)
         return self.activation(res)
 
-
-def DenseLipAOL(dim_in: int, dim_hidden: int, n_layers: int, dim_out: int = 1, coeff_lip:float = 1., activation=nn.ReLU()):
-    """
-    Neural network made of _Semi-Definite Programming_ neural layers, as proposed by [1].
+class DenseLipAOL(ImplicitModel):
+    """Neural network made of _Semi-Definite Programming_ neural layers, as proposed by [1].
     Using a square matrix $W \\in \\mathbb{R}^{k \\times k}$ and a bias vector $b \\in \\mathbb{R}^k$, each layer is defined as:
 
     $$x \\mapsto \\sigma(WT^{-1/2}x + b)$$
@@ -163,24 +177,29 @@ def DenseLipAOL(dim_in: int, dim_hidden: int, n_layers: int, dim_out: int = 1, c
 
     and $\\sigma(x) = \\max(0, x)$ is any 1-Lipschitz function.
 
-    Args:
-        dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
-        dim_hidden (int): dimension of the hidden layers.
-        n_layers (int): number of hidden layers.
-        dim_out (int, optional): dimension of the output layers. Defaults to 1.
-        coeff_lip (float, optional): Lipschitz constant. Defaults to 1.
-        activation (torch.nn.Module, optional): Activation function to consider. Defaults to nn.ReLU().
-
     References:
-        _Almost-Orthogonal Layers for Efficient General-Purpose Lipschitz Networks_, Prach and Lampert, 2022
+        [1] _Almost-Orthogonal Layers for Efficient General-Purpose Lipschitz Networks_, Prach and Lampert, 2022
     """
-    layers = []
-    layers.append(nn.ZeroPad1d((0, dim_hidden-dim_in)))
-    for _ in range(n_layers):
-        layers.append(AOLLipschitzDenseLayer(dim_hidden, activation=activation))
-    layers.append(torchlip.FrobeniusLinear(dim_hidden, dim_out))
-    model = torch.nn.Sequential(*layers, k_coef_lip=coeff_lip)
-    return model
+
+    def __init__(self, dim_in: int, dim_hidden: int, n_layers: int, dim_out: int = 1, coeff_lip:float = 1., activation=nn.ReLU()):
+        """
+        Args:
+            dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
+            dim_hidden (int): dimension of the hidden layers.
+            n_layers (int): number of hidden layers.
+            dim_out (int, optional): dimension of the output layers. Defaults to 1.
+            coeff_lip (float, optional): Lipschitz constant. Defaults to 1.
+            activation (torch.nn.Module, optional): Activation function to consider. Defaults to nn.ReLU().
+        """
+        super().__init__()
+        layers = []
+        layers.append(nn.ZeroPad1d((0, dim_hidden-dim_in)))
+        for _ in range(n_layers):
+            layers.append(AOLLipschitzDenseLayer(dim_hidden, activation=activation))
+        layers.append(torchlip.FrobeniusLinear(dim_hidden, dim_out))
+        self.model = torchlip.Sequential(*layers, k_coef_lip=coeff_lip)
+
+    def forward(self, x): return self.model(x)
 
 
 #######################################################################################################################################
@@ -228,48 +247,56 @@ class CPLLipschitzDenseLayer(nn.Module):
         return x - 2/(sv_max**2 + 1e-12) * res
 
 
-
-def DenseLipCPL(dim_in: int, dim_hidden: int, n_layers: int,  dim_out: int = 1, coeff_lip:float = 1., activation=nn.ReLU(), with_group_sort:bool = True):
-    """
-    Neural network made of _Convex Potential layers_, as proposed by [1].
+class DenseLipCPL(ImplicitModel):
+    """Neural network made of _Convex Potential layers_, as proposed by [1].
     Using a square matrix $W \\in \\mathbb{R}^{k \\times k}$ and a bias vector $b \\in \\mathbb{R}^k$, each layer is defined as:
 
     $$x \\mapsto x - \\frac{2}{||W||_2} W^T \\sigma(Wx + b)$$
 
     where $\\sigma(x) = \\max(0, x)$.
 
-    Args:
-        dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
-        dim_hidden (int): dimension of the hidden layers.
-        n_layers (int): number of hidden layers.
-        dim_out (int, optional): dimension of the output layers. Defaults to 1.
-        coeff_lip (float, optional): Lipschitz constant. Defaults to 1.
-        activation (torch.nn.Module, optional): Activation function to consider. Defaults to nn.ReLU().
-        with_group_sort (bool, optional): whether to add a GroupSort2 between each layer to slightly increase accuracy. Defaults to True
-
     References:
         [1] _A Dynamical System Perspective for Lipschitz Neural Networks_, Meunier et al., 2022
     """
-    layers = []
-    layers.append(nn.ZeroPad1d((0, dim_hidden-dim_in)))
-    for _ in range(n_layers):
-        layers.append(CPLLipschitzDenseLayer(dim_hidden, activation=activation))
-        if with_group_sort: layers.append(torchlip.GroupSort2())
-    layers.append(torchlip.FrobeniusLinear(dim_hidden,dim_out, k_coef_lip=coeff_lip))
-    model = torch.nn.Sequential(*layers)
-    return model
+    def __init__(self, dim_in: int, dim_hidden: int, n_layers: int,  dim_out: int = 1, coeff_lip:float = 1., activation=nn.ReLU(), with_group_sort:bool = True):
+        """
+        Args:
+            dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
+            dim_hidden (int): dimension of the hidden layers.
+            n_layers (int): number of hidden layers.
+            dim_out (int, optional): dimension of the output layers. Defaults to 1.
+            coeff_lip (float, optional): Lipschitz constant. Defaults to 1.
+            activation (torch.nn.Module, optional): Activation function to consider. Defaults to nn.ReLU().
+            with_group_sort (bool, optional): whether to add a GroupSort2 between each layer to slightly increase accuracy. Defaults to True
+        """
+        super().__init__()
+        layers = []
+        layers.append(nn.ZeroPad1d((0, dim_hidden-dim_in)))
+        for _ in range(n_layers):
+            layers.append(CPLLipschitzDenseLayer(dim_hidden, activation=activation))
+            if with_group_sort: layers.append(torchlip.GroupSort2())
+        layers.append(torchlip.FrobeniusLinear(dim_hidden,dim_out, k_coef_lip=coeff_lip))
+        self.model = torch.nn.Sequential(*layers)
+
+    def forward(self, x): return self.model(x)
 
 
 #######################################################################################################################################
 
+def parameter_singular_values(model : ImplicitModel) -> dict:
+    """Computes the minimal and maximal singular values of each parameter matrices of the input model.
+    
+    Args:
+        model (ImplicitModel): the input implicit model
 
-def parameter_singular_values(model):
+    Returns:
+        dict: a dictionnary that assigns a tuple (s_min, s_max) to every layer name with a matrix of parameters 
+    """
     layers = list(model.children())
-    data= []
+    data = {}
     for layer in layers:
         if hasattr(layer, "weight"):
             w = layer.weight
             u, s, v = torch.linalg.svd(w)
-            # data.append(f"{layer}, {s}")
-            data.append(f"{layer}, min={s.min()}, max={s.max()}")
+            data[f"{layer}"] =  (s.min(), s.max())
     return data

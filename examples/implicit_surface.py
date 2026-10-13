@@ -15,7 +15,7 @@ argument_parser = argparse.ArgumentParser(
 )
 argument_parser.add_argument("input_geometry", type=str)
 argument_parser.add_argument("-o", "--output-name", default="", type=str)
-argument_parser.add_argument("-nl", "--n-layers", type=int, default=6, help="Number of layers in the neural network")
+argument_parser.add_argument("-nl", "--n-layers", type=int, default=5, help="Number of layers in the neural network")
 argument_parser.add_argument("-ls", "--layer-size", type=int, default=128, help="size of each layer in the neural network")
 argument_parser.add_argument("-np", "--n-points", type=int, default=500_000, help="Number of sampled point in the training dataset")
 argument_parser.add_argument("-ne", type=int, default=150, help="Number training epochs")
@@ -56,19 +56,15 @@ model = IL.nn.SirenNet(geometry.dim, args.layer_size, args.n_layers).to(DEVICE)
 
 print(f"{IL.nn.count_parameters(model)} parameters")
 
-if args.output_name:
-    torch.save(model.state_dict(), f"output/{args.output_name}.pt")
-else:
-    torch.save(model.state_dict(), f"output/siren_{args.layer_size}x{args.n_layers}.pt")
-
 # Setup trainer
 trainer = ImplicitSurfaceTrainer(TrainingConfig(
     BATCH_SIZE=10_000,
     TEST_BATCH_SIZE = 50_000,
     N_EPOCHS=args.ne,
-    LEARNING_RATE=1e-3,
+    LEARNING_RATE = 1e-3,
     OPTIMIZER="Adam",
-    DEVICE=DEVICE
+    DEVICE=DEVICE,
+    NUM_DATALOADER_WORKERS=10
 ))
 
 trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
@@ -79,7 +75,7 @@ elif geometry.dim == 3:
 trainer.set_training_data(train_data)
 trainer.train(model)
 
-if args.output_name:
-    torch.save(model.state_dict(), f"output/{args.output_name}.pt")
-else:
-    torch.save(model.state_dict(), f"output/siren_{args.layer_size}x{args.n_layers}.pt")
+# if args.output_name:
+#     torch.save(model.state_dict(), f"output/{args.output_name}.pt")
+# else:
+#     torch.save(model.state_dict(), f"output/siren_{args.layer_size}x{args.n_layers}.pt")

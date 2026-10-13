@@ -8,7 +8,19 @@ from ..utils import forward_in_batches
 from .queries import estimate_local_Lipschitz_constant
 
 
-def render_sdf_2d(render_path, contour_path, gradient_path, model, domain: M.geometry.AABB, device, res=1000, batch_size: int=1000, **kwargs):
+def generate_regular_grid(domain : M.geometry.AABB, shape:tuple, device: torch.device) -> torch.Tensor:
+    L = [torch.linspace(domain.mini[i], domain.maxi[i], n, dtype=torch.float32, device=device) for i,n in enumerate(shape)]
+    pts = torch.stack(torch.meshgrid(*L, indexing="ij"), dim=-1).reshape(-1, len(shape))
+    return pts
+
+def prepare_model(model, device):
+    try:
+        _model = torch.compile(model.eval().to(device))
+    except:
+        _model = model.eval().to(device)
+    return _model
+
+def render_sdf_2d(render_path, contour_path, gradient_path, model, domain: M.geometry.AABB, device : torch.device, res=1000, batch_size: int=2**15, **kwargs):
     """ Renders a 2D SDF
 
     Args:
@@ -17,28 +29,26 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain: M.geo
         gradient_path (str): Path to export the gradient norm plot
         model : SDF neural model
         domain (M.geometry.AABB): axis aligned bounding box of dimension 2to represent the plotting domain.
-        device (str): cpu or cuda
+        device (torch.device): device onto which the computation are performed.
         res (int, optional): Image resolution. Defaults to 800.
-        batch_size (int, optional): Size of forward batches. Defaults to 1000.
+        batch_size (int, optional): Size of forward batches. Defaults to 2**15.
 
     Keyword Args:
         n_contours (int, optional): Defaults to 16.    
     """
     assert domain.dim == 2
-
-    X = np.linspace(domain.mini[0], domain.maxi[0], res)
+    _model = prepare_model(model, device)
     resY = round(res * domain.span[1]/domain.span[0])
-    Y = np.linspace(domain.mini[1], domain.maxi[1], resY)
-
-    pts = np.hstack((np.meshgrid(X,Y))).swapaxes(0,1).reshape(2,-1).T
+    pts = generate_regular_grid(domain, (res, resY), device)
     if gradient_path is not None:
         dist_values,grad_values = forward_in_batches(
-            model, pts, device, 
+            _model, pts, device, 
             compute_grad=True, batch_size=batch_size)
+        grad_values = grad_values.cpu().numpy()
     else:
-        dist_values = forward_in_batches(model, pts, device, compute_grad=False, batch_size=batch_size)
-
-    img = np.concatenate(dist_values).reshape((res,resY)).T
+        dist_values = forward_in_batches(_model, pts, device, compute_grad=False, batch_size=batch_size)
+    dist_values = dist_values.cpu().numpy()
+    img = dist_values.reshape((res,resY)).T
     img = img[::-1,:]
 
     vmin = min(np.amin(img), -1e-8)
@@ -77,7 +87,7 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain: M.geo
         plt.colorbar(pos)
         plt.savefig(gradient_path, bbox_inches='tight', pad_inches=0)
 
-def render_sdf_quad(render_path, contour_path, gradient_path, model, P0, P1, P2, device, res=800, batch_size=1000, **kwargs):
+def render_sdf_quad(render_path, contour_path, gradient_path, model, P0, P1, P2, device: torch.device, res: int =1000, batch_size: int = 2**15, **kwargs):
     """
     Renders a 3D sdf along a specified (planar) quad in space.
 
@@ -86,36 +96,30 @@ def render_sdf_quad(render_path, contour_path, gradient_path, model, P0, P1, P2,
         contour_path (str): Path to export the contour plot
         gradient_path (str): Path to export the gradient norm plot
         model : SDF neural model
-        P0 (array): First point of the quad ( (0,0) in parameter space)
-        P1 (array): Second point of the quad ( (1,0) in parameter space)
-        P2 (array): Thirs point of the quad ( (0,1) in parameter space)
-        device (str): cpu or cuda
-        res (int, optional): Image resolution. Defaults to 800.
-        batch_size (int, optional): Size of forward batches. Defaults to 1000.
+        P0 (torch.Tensor): First point of the quad ( (0,0) in parameter space)
+        P1 (torch.Tensor): Second point of the quad ( (1,0) in parameter space)
+        P2 (torch.Tensor): Third point of the quad ( (0,1) in parameter space)
+        device (torch.device): device onto which the computation are performed.
+        res (int, optional): Image resolution. Defaults to 1000.
+        batch_size (int, optional): Size of forward batches. Defaults to 2**15.
     """
-    
-    dx = P1 - P0
-    dy = P2 - P0
-    X = np.linspace(0,1, res)
+    _model = prepare_model(model, device)
+    P0 = torch.as_tensor(P0, device=device)
+    dx = torch.as_tensor(P1 - P0, device=device)
+    dy = torch.as_tensor(P2 - P0, device=device)
     resY = round(res * M.geometry.norm(dy)/M.geometry.norm(dx))
-    Y = np.linspace(0,1, resY)
-
-    pts = []
-    for ax in X:
-        for ay in Y:
-            p = P0 + ax*dx + ay*dy
-            pts.append(p)
-    pts = np.array(pts)
-    
+    pts = generate_regular_grid(M.geometry.AABB((0.,0.), (1.,1.)), (res,resY), device) # flat unit grid
+    pts = P0 + pts[:,0:1]*dx + pts[:,1:2]*dy # apply linear transform to map the unit grid to the quad
     if gradient_path is not None:
         dist_values,grad_values = forward_in_batches(
-            model, pts, device, 
+            _model, pts, device, 
             compute_grad=True, batch_size=batch_size)
+        grad_values = grad_values.cpu().numpy()
     else:
-        dist_values = forward_in_batches(model, pts, device, compute_grad=False, batch_size=batch_size)
+        dist_values = forward_in_batches(_model, pts, device, compute_grad=False, batch_size=batch_size)
+    dist_values = dist_values.cpu().numpy()
 
-
-    img = np.concatenate(dist_values).reshape((res,resY)).T
+    img = dist_values.reshape((res,resY)).T
     img = img[::-1,:]
 
     vmin = np.amin(img)
@@ -157,25 +161,22 @@ def render_sdf_quad(render_path, contour_path, gradient_path, model, P0, P1, P2,
         plt.savefig(gradient_path, bbox_inches='tight', pad_inches=0)
 
 
-def render_lip_constant_2d(img_path: str, model, domain : M.geometry.AABB, device, res=1000, batch_size=5000):
+def render_lip_constant_2d(img_path: str, model, domain : M.geometry.AABB, device : torch.device, res=1000, batch_size=2*15):
     """Renders a 2D image of the local Lipschitz constant (maximal gradient norm in a neighborhood) of a 2D model.
 
     Args:
         img_path (str): path to export the render.
         model (torch.nn.Module): the neural model
         domain (M.geometry.AABB): domain onto which the function values are computed.
-        device (str): device onto which the computation are performed.
-        res (int, optional): resolution of the marching cubes grid. Defaults to 100.
-        batch_size (int, optional): batch size for forward computation. Defaults to 5000.
+        device (torch.device): device onto which the computation are performed.
+        res (int, optional): Image resolution. Defaults to 1000.
+        batch_size (int, optional): batch size for forward computation. Defaults to 2**15.
     """
     assert domain.dim == 2
-
-    X = np.linspace(domain.mini[0], domain.maxi[0], res)
+    _model = prepare_model(model, device)
     resY = round(res * domain.span[1]/domain.span[0])
-    Y = np.linspace(domain.mini[1], domain.maxi[1], resY)
-
-    pts = np.hstack((np.meshgrid(X,Y))).swapaxes(0,1).reshape(2,-1).T
-    lip_values = estimate_local_Lipschitz_constant(model, pts, device, batch_size=batch_size)
+    pts = generate_regular_grid(domain, (res, resY), device)
+    lip_values = estimate_local_Lipschitz_constant(_model, pts, device, batch_size=batch_size)
     img = lip_values.reshape((res,resY)).T
     img = img[::-1,:]
     plt.clf()
@@ -188,10 +189,10 @@ def render_lip_constant_2d(img_path: str, model, domain : M.geometry.AABB, devic
 def reconstruct_surface_marching_cubes(
     model : torch.nn.Module, 
     domain : M.geometry.AABB, 
-    device : str, 
+    device : torch.device, 
     iso : int = 0, 
-    res : int = 100, 
-    batch_size : int = 5000,
+    res : int = 256, 
+    batch_size : int = 2**16,
     **kwargs
 ) -> dict:
     """Extracts isosurfaces of a given neural implicit by using the Marching Cube algorithm.
@@ -199,65 +200,47 @@ def reconstruct_surface_marching_cubes(
     Args:
         model (torch.nn.Module): the neural implicit function.
         domain (M.geometry.AABB): domain onto which the function values are computed.
-        device (str): device onto which the computation are performed.
+        device (torch.device): device onto which the computation are performed.
         iso (int, optional): value of the isosurface. Several values can be provided in a list. If that is the case, one mesh per isovalue will be produced. Defaults to 0.
         res (int, optional): resolution of the marching cubes grid. Defaults to 100.
-        batch_size (int, optional): batch size for forward computation. Defaults to 5000.
+        batch_size (int, optional): batch size for forward computation. Defaults to 2**16.
 
     Keyword Args:
         use_tqdm (bool, optional): whether to display a progress bar during computation. Defaults to False.
-        num_workers (int, optional): number of workers for the dataloader to feed to the GPU. Defaults to -1 (number of cpu cores).
+        full_precision (bool, optional): by default, the computation is done over torch.float16 for faster inference. This flag enables computation in full torch.float32 precision. Defaults to False.
 
     Returns:
-        dict: returns a dictionnary of ((i,iso), mesh) where i is a unique identifier, iso is the value of the isovalue and mesh is the output surface mesh (mouette.mesh.SurfaceMesh type).
+        dict: returns a dictionary of ((i,iso), mesh) where i is a unique identifier, iso is the value of the isovalue and mesh is the output surface mesh (mouette.mesh.SurfaceMesh type).
 
     References:
-        - Marching cubes: A high resolution 3D surface construction algorithm, Lorensen & Cline (1998)  
+        - _Marching cubes: A high resolution 3D surface construction algorithm_, Lorensen & Cline (1998)  
         - https://scikit-image.org/docs/0.25.x/auto_examples/edges/plot_marching_cubes.html  
     """
     if isinstance(iso, (int,float)): iso = [iso]
+    _model = prepare_model(model, device)
     
     ### Feed grid to model
-    L = [np.linspace(domain.mini[i], domain.maxi[i], res) for i in range(3)]
-    pts = np.hstack((np.meshgrid(*L))).swapaxes(0,1).reshape(3,-1).T
-    dist_values = forward_in_batches(model, pts, device, 
+    pts = generate_regular_grid(domain, (res, res, res), device)
+    dist_values = forward_in_batches(
+        _model, pts, device,
         compute_grad=False, batch_size=batch_size, 
-        use_tqdm=kwargs.get("use_tqdm",False), num_workers=kwargs.get("num_workers", -1))
+        use_tqdm=kwargs.get("use_tqdm", False),
+        full_precision=kwargs.get("full_precision", False)
+    )
+    dist_values = dist_values.reshape((res,res,res)).cpu().numpy()
     print("Implicit values:", np.amin(dist_values), np.amax(dist_values))
-    dist_values = dist_values.reshape((res,res,res))
 
     ### Call marching cubes
     to_save = dict()
+    spacing = tuple((domain.maxi - domain.mini) / (res - 1))
     for ioff,off in enumerate(iso):
         try:
-            verts,faces,normals,values = marching_cubes(dist_values, level=off)
-            values = values[:, np.newaxis]
-            m = M.mesh.RawMeshData()
-            m.vertices += list(verts)
-            m.faces += list(faces)
-            m = M.mesh.SurfaceMesh(m)
-            normal_attr = m.vertices.create_attribute("normals", float, 3, dense=True)
-            normal_attr._data = normals
-            values_attr = m.vertices.create_attribute("values", float, 1, dense=True)
-            values_attr._data = values
-            to_save[(ioff, off)] = m
+            verts,faces,normals,values = marching_cubes(dist_values, level=off, spacing=spacing)
         except ValueError:
             continue
-    
-    ### Reproject meshes to correct coordinates
-    for key,mesh in to_save.items():
-        for v in mesh.id_vertices:
-            pV = M.Vec(mesh.vertices[v])
-            ix, iy, iz = int(pV.x), int(pV.y), int(pV.z)
-            dx, dy, dz = pV.x%1, pV.y%1, pV.z%1
-
-            ixn = ix+1 if ix<res-1 else res-1
-            iyn = iy+1 if iy<res-1 else res-1
-            izn = iz+1 if iz<res-1 else res-1
-
-            vx = (1-dx)*L[0][ix] + dx * L[0][ixn]
-            vy = (1-dy)*L[1][iy] + dy * L[1][iyn]
-            vz = (1-dz)*L[2][iz] + dz * L[2][izn]
-            mesh.vertices[v] = M.Vec(vx,vy,vz)
-        to_save[key] = mesh
+        verts += domain.mini
+        m = M.mesh.from_arrays(verts, F=faces)
+        m.vertices.register_array_as_attribute("normals",normals)
+        m.vertices.register_array_as_attribute("values", values)
+        to_save[(ioff, off)] = m
     return to_save

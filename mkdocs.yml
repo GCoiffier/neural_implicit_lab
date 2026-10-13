@@ -84,15 +84,20 @@ nav:
     - "tutorial/full_example.md"
 
   - Documentation:
-    - "documentation/geometry.md"
-    - "documentation/dataset_sampling.md"
-    - "documentation/field_computations.md"
-    - "documentation/nn_architectures.md"
-    - "documentation/optimizers.md"
-    - "documentation/trainer.md"
-    - "documentation/callbacks.md"
-    - "documentation/loss_functions.md"
-    - "documentation/visualize.md"
-    - "documentation/queries.md"
+    - implicitlab.data:
+      - "documentation/geometry.md"
+      - "documentation/dataset_sampling.md"
+      - "documentation/field_computations.md"
+    - implicitlab.nn:
+      - "documentation/base_implicit_model.md"
+      - "documentation/nn_architectures.md"
+    - implicitlab.training:
+      - "documentation/trainer.md"
+      - "documentation/callbacks.md"
+      - "documentation/optimizers.md"
+      - "documentation/loss_functions.md"
+    - implicitlab.queries:
+      - "documentation/queries.md"
+      - "documentation/visualize.md"
     - "documentation/diff_op.md"
     - "documentation/utils.md"

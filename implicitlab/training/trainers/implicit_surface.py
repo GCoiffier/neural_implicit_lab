@@ -13,7 +13,7 @@ class ImplicitSurfaceTrainer(Trainer):
 
     $$\\mathcal{L}_{\\text{eikonal}}[f] = \\int_D (|| \\nabla f(x)|| - 1)^2\\;dx$$
 
-    $$\\mathbb{L}_{\\text{out}}[f] = \\int_D \\exp(-\\rho\,|f(x)|)\\;dx$$
+    $$\\mathbb{L}_{\\text{out}}[f] = \\int_D \\exp(-\\rho\\,|f(x)|)\\;dx$$
 
     This trainer assumes that the dataset is made of (points, normals) pairs which are sampled _on_ the shape, for the evaluation of $$\\mathcal{L}_{\\text{on}}$ and $\\mathcal{L}_{\\text{normal}}$. The two other loss functions are evaluated for every batch at random positions in a [-1.5, 1.5]^d box.
 
