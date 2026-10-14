@@ -31,6 +31,8 @@ To install implicitlab, simply type:
 pip install implicitlab
 ```
 
+The library has been developed and tested with python 3.12 / torch 2.11 and python 3.14 / torch 2.14
+
 
 ### Dependencies
 Implicitlab currently depends on the following libraries:  
@@ -39,7 +41,6 @@ Implicitlab currently depends on the following libraries:
 - [meshio](https://pypi.org/project/meshio/)  
 - [mouette](https://github.com/GCoiffier/mouette)  
 - [libigl](https://libigl.github.io/)  
-- [triangle](https://pypi.org/project/triangle/)  
 - [numpy](https://numpy.org/)  
 - [scipy](https://scipy.org/)  
 - [scikit-image](https://scikit-image.org/)  

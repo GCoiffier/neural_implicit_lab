@@ -27,11 +27,11 @@ def axes():
 
 def sphere():
     sph = M.procedural.sphere_fibonacci(550)
-    return IL.data.prepare_geometry(sph)
+    return IL.data.geometry.prepare_geometry(sph)
 
 def spot():
     return load_geometry("tests/data/spot.obj")
 
 def rolling_knot():
-    return load_geometry("tests/data/rolling_knot.obj")
+    return load_geometry("tests/data/rolling_knot.mesh")
 

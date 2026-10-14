@@ -42,7 +42,6 @@ Implicitlab currently depends on the following libraries:
 - [meshio](https://pypi.org/project/meshio/)  
 - [mouette](https://github.com/GCoiffier/mouette)  
 - [libigl](https://libigl.github.io/)  
-- [triangle](https://pypi.org/project/triangle/)  
 - [numpy](https://numpy.org/)  
 - [scipy](https://scipy.org/)  
 - [scikit-image](https://scikit-image.org/)  

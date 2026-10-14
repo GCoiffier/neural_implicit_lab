@@ -15,17 +15,16 @@ class TrainingConfig:
     """Configuration object storing hyperparameters for a `Trainer` class.
 
     Attributes:
-        BATCH_SIZE (int): Number of samples per batch in the training data loader. Defaults to 100.
-        TEST_BATCH_SIZE (int): Number of samples per batch in the test data loader. Defaults to 2**15 (=32768).
+        BATCH_SIZE (int): Number of samples per batch in the training data loader. Defaults to 2**13 (= 8192).
+        TEST_BATCH_SIZE (int): Number of samples per batch in the test data loader. Defaults to 2**15 (= 32768).
         N_EPOCHS (int): Number of passes over the training dataset. Defaults to 100.
         LEARNING_RATE (float): Learning rate given to the optimizer. Defaults to 1e-3.
-        DEVICE (str): Torch device on which training runs ("cpu", "cuda", ...). A warning is emitted if
-            set to "cpu" while a GPU is available. Defaults to "cpu".
-        OPTIMIZER (str): Name of the optimizer (case-insensitive). One of "adam", "sgd", "muon", "adabound", or "custom". If "custom" is selected, the user must set `trainer.optimizer` before calling the `train` method). Unknown names fall back to Adam. Defaults to "Adam".
+        DEVICE (str): Torch device on which training runs ("cpu", "cuda", ...). A warning is emitted if set to "cpu" while a GPU is available. Defaults to "cpu".
+        OPTIMIZER (str): Name of the optimizer (case-insensitive). One of "adam", "sgd", "muon" or "custom". If "custom" is selected, the user must set `trainer.optimizer` before calling the `train` method). Unknown names fall back to Adam. Defaults to "Adam".
         MATMUL_PRECISION (str): Passed to `torch.set_float32_matmul_precision` at the start of training. Choices are ["highest", "high", "medium"]. "high" enables TF32 matrix products on recent GPUs, which is faster but less precise. Defaults to "high".
         COMPILE (bool): Whether to wrap the model with `torch.compile` for training. Compiling the model will greatly improve performance but will prevent the use of double differentiation, i.e. differential losses (like the eikonal loss). Defaults to False.
     """
-    BATCH_SIZE: int = 100
+    BATCH_SIZE: int = 2**13
     TEST_BATCH_SIZE: int = 2**15
     N_EPOCHS : int = 100
     LEARNING_RATE : float = 1e-3

@@ -1,9 +1,8 @@
 import mouette as M
 import numpy as np
-import triangle
 from collections import deque
 from tqdm import trange
-from scipy.spatial import KDTree
+from scipy.spatial import KDTree, Delaunay
 
 def pseudo_surface_from_polyline(pl: M.mesh.PolyLine):
     """Transforms a 2D polyline into a closed 3D surface by linking each edge (a,b) to two far away points Z+ and Z- to form two triangles.
@@ -134,6 +133,7 @@ def estimate_vertex_areas(V, N, tree:KDTree, k=10):
         neighbors = [M.geometry.project_to_plane(_X,N[i],V[i]) for _X in neighbors] # Project onto normal plane
         neighbors = [M.Vec(Xi.dot(_X), Yi.dot(_X)) for _X in neighbors]
 
-        for (p1,p2,p3) in triangle.triangulate({"vertices" : neighbors})["triangles"]:
+        triangulation = Delaunay(neighbors)
+        for (p1,p2,p3) in triangulation.simplices:
             A[i] += M.geometry.triangle_area_2D(neighbors[p1], neighbors[p2], neighbors[p3])
     return A

@@ -10,6 +10,7 @@ from implicitlab.training import callbacks
 OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 geometry = IL.load_geometry(sys.argv[1])
+geometry = IL.data.extract_boundary_polyline_from_2D_mesh(geometry)
 print(geometry.geom_type)
 
 DEVICE = IL.utils.get_device()
@@ -63,7 +64,7 @@ trainer.add_callbacks(
     callbacks.ResampleCB(sampler, 2**20, on_ratio=0.2, freq=trainer.config.N_EPOCHS//2)
 )
 if geometry.dim == 2:
-    trainer.add_callbacks(callbacks.Render2DCB(OUTPUT_DIR, 100, plot_domain=M.geometry.AABB([-1.2, -1.2], [1.2, 1.2])))
+    trainer.add_callbacks(callbacks.Render2DCB(OUTPUT_DIR, 100, plot_domain=M.geometry.AABB([-1.2, -1.2], [1.2, 1.2]), n_contours=31))
 elif geometry.dim == 3:
     trainer.add_callbacks(callbacks.MarchingCubeCB(OUTPUT_DIR, 100, res=256, iso=0.))
 trainer.set_training_data(train_data)

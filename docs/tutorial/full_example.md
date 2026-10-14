@@ -116,13 +116,12 @@ The trainer can then be instantiated by specifying a training configuration:
 
 ```python
 trainer = ExampleTrainer(TrainingConfig(
-    BATCH_SIZE=10_000,
-    TEST_BATCH_SIZE = 50_000,
-    N_EPOCHS=200,
-    LEARNING_RATE=1e-3,
-    OPTIMIZER="Adam",
-    DEVICE=DEVICE,
-    NUM_DATALOADER_WORKERS=-1 # set to the max number of torch threads
+    BATCH_SIZE=2**14,
+    TEST_BATCH_SIZE = 2**16,
+    N_EPOCHS=1000,
+    LEARNING_RATE=1e-4,
+    OPTIMIZER="adam",
+    DEVICE=DEVICE
 ))
 ```
 
@@ -131,8 +130,8 @@ trainer = ExampleTrainer(TrainingConfig(
 To visualize the result of the training, we can add callbacks to our trainer:
 
 ```python
-# the logger will write the loss after each epoch on a text file
-trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt")) 
+# the logger will write the loss and relevant info in the terminal after each epoch
+trainer.add_callbacks(callbacks.PrinterCB()) 
 if geometry.dim == 2:
     # output 2D images of the implicit field
     trainer.add_callbacks(callbacks.Render2DCB("output", 50)) 

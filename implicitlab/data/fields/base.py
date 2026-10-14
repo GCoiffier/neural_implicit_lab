@@ -46,5 +46,7 @@ class EmptyFieldGenerator(FieldGenerator):
 
 class UnsupportedGeometryFormat(Exception):
     def __init__(self, geom_type : GeometryType):
-        message = f"Geometry type '{geom_type}' is not supported for this field generator"
+        message = f"Geometry type '{geom_type}' is not supported for this field generator."
+        if geom_type == GeometryType.SURFACE_MESH_2D:
+            message += "\nConsider using `implicitlab.data.extract_boundary_polyline_from_2D_mesh to convert your SURFACE_MESH_2D into a POLYLINE_2D."
         super().__init__(message)
