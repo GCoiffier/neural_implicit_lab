@@ -45,9 +45,9 @@ def forward_in_batches(
         inputs (torch.Tensor): Input array to be fed to the model. Also supports numpy array, which will be converted automatically.
         device (torch.device): which device the computation should be run on.
         compute_grad (bool, optional): whether to also compute and returns the gradients of the model at the input points. Defaults to False.
-        batch_size (int, optional): Batch size for the forward computation. Defaults to 5_000.
+        batch_size (int, optional): Batch size for the forward computation. Defaults to 2**16.
         use_tqdm (bool, optional): Whether to display a tqdm progress bar during computation. Defaults to False.
-        full_precision (bool, optional): Whether to compute with torch.float16 (faster) or torch.float32 (accurate). Defaults to True.
+        full_precision (bool, optional): Whether to compute with torch.float32 (more accurate) or torch.float16 (faster but some slight errors may occur). Defaults to True.
 
     Returns:
         torch.Tensor: the output `model(inputs)`. If `compute_grad` is set to True, also returns the gradients as another tensor.
@@ -58,10 +58,8 @@ def forward_in_batches(
     if use_tqdm: batch_starts = tqdm(batch_starts, total=len(batch_starts))
     outputs = None # will be created on the fly since its shape is unknown at first
     grads = torch.empty_like(inputs) if compute_grad else None
-    grad_context = torch.enable_grad() if compute_grad else torch.no_grad()
-
     amp_dtype = torch.float16 if device.type == "cuda" else torch.bfloat16
-    with grad_context, torch.autocast(device.type, dtype=amp_dtype, enabled= not full_precision):
+    with torch.set_grad_enabled(compute_grad), torch.autocast(device.type, dtype=amp_dtype, enabled= not full_precision):
         for i in batch_starts:
             batch = inputs[i:i+batch_size]
             if compute_grad:

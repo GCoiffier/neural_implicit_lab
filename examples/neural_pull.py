@@ -3,13 +3,13 @@ import mouette as M
 import numpy as np
 import torch
 
-import IL as IL
-from IL.training import TrainingConfig, NeuralPullTrainer
-from IL.training import callbacks
+import implicitlab as IL
+from implicitlab.training import TrainingConfig, NeuralPullTrainer, callbacks
 
-
-os.makedirs("output", exist_ok=True)
+OUTPUT_DIR = "output"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 geometry = IL.load_geometry(sys.argv[1])
+geometry = IL.data.extract_boundary_polyline_from_2D_mesh(geometry)
 print(geometry.geom_type)
 
 DEVICE = IL.utils.get_device()
@@ -18,17 +18,15 @@ DEVICE = IL.utils.get_device()
 
 sampler = IL.PointSampler(
     geometry, 
-    IL.sampling_strategy.NearGeometryGaussian(geometry, stdv=0.1), 
+    IL.data.sampling_strategies.NearGeometryGaussian(geometry, stdv=0.1), 
     IL.fields.Nearest(geometry)
 )
 
-points, val = sampler.sample(200_000, on_ratio=0)
-train_data = IL.data.make_tensor_dataset((points, val), DEVICE)
-# visu_vector_field = M.procedural.vector_field(points, val-points)
-# M.mesh.save(visu_vector_field, "output/project.mesh")
+points, val = sampler.sample(2**19, on_ratio=0)
+train_data = IL.data.make_tensor_dataset((points, val))
 
-# test_pts, test_val = sampler.sample(10_000)
-# test_data = IL.data.make_tensor_dataset((test_pts, test_val), DEVICE)
+# test_pts, test_val = sampler.sample(2**15)
+# test_data = IL.data.make_tensor_dataset((test_pts, test_val))
 
 ###### Training 
 
@@ -39,19 +37,19 @@ print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
 config = TrainingConfig(
-    BATCH_SIZE=5000,
+    BATCH_SIZE=2**14,
     N_EPOCHS=200,
-    DEVICE=DEVICE
+    DEVICE=DEVICE,
+    OPTIMIZER="adam",
+    LEARNING_RATE=1e-4
 )   
 
 trainer = NeuralPullTrainer(config)
 
 trainer.add_callbacks(
-    callbacks.LoggerCB("output/training_log.txt"),
-    callbacks.Render2DCB("output", 10),
-    # callbacks.CheckpointCB("output", [x+1 for x in range(config.N_EPOCHS-1) if x%10==0])
+    callbacks.PrinterCB(),
+    callbacks.Render2DCB(OUTPUT_DIR, 10),
 )
 trainer.set_training_data(train_data)
-# trainer.set_test_data(test_data)
 trainer.train(model)
-IL.nn.save_model(model, "output/model.pt")
+model.save(os.path.join(OUTPUT_DIR, "model.inr"))

@@ -33,19 +33,20 @@ class PointSampler:
             np.ndarray, Tuple(np.ndarray): An array of sampled points and an array of the field value at these points.
         """
         on_ratio = min(max(on_ratio, 0.), 1.)
-        if on_ratio<1e-14:
+        n_points_on_geometry = round(on_ratio*n_points)
+        if n_points_on_geometry<1:
            self.points = self.sampler.sample(n_points)
            self.fields = tuple(field.compute(self.points) for field in self.field_generators)
 
-        elif on_ratio>1-1e-14:
+        elif n_points_on_geometry==n_points:
             self.points = self.sample_geometry(n_points)
             self.fields = tuple(field.compute_on(self.points) for field in self.field_generators)
+
         else: 
-            n_on = int(on_ratio*n_points)
-            pts_on = self.sample_geometry(n_on)
+            pts_on = self.sample_geometry(n_points_on_geometry)
             fields_on = tuple(field.compute_on(pts_on) for field in self.field_generators)
             
-            n_other = n_points - n_on
+            n_other = n_points - n_points_on_geometry
             pts_other = self.sampler.sample(n_other)
             fields_other = tuple(field.compute(pts_other) for field in self.field_generators)
             

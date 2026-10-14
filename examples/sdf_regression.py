@@ -17,23 +17,17 @@ DEVICE = IL.utils.get_device()
 ####### Dataset Sampling
 
 field = IL.fields.Distance(geometry, signed=True, square=False)
-# field = implicitlab.fields.Occupancy(geometry, v_in=0, v_out=1, v_on=0)
-# field = implicitlab.fields.CustomFunction(lambda p : np.cos(5*p[0])*np.cos(5*p[1]))
-
-# sampling_strat = implicitlab.sampling_strategy.UniformBox(geometry)
-# sampling_strat = IL.sampling_strategy.NearGeometryGaussian(geometry)
 sampling_strat = IL.sampling_strategies.CombinedStrategy([
     IL.sampling_strategies.UniformBox(geometry),
     IL.sampling_strategies.NearGeometryGaussian(geometry)
-], [2., 1.])
-
+], [1., 1.])
 
 sampler = IL.PointSampler(geometry, sampling_strat, field)
-points, val = sampler.sample(500_000, on_ratio=0.3)
+points, val = sampler.sample(2**20, on_ratio=0.2)
 train_data = IL.data.make_tensor_dataset((points, val))
 
-test_pts, test_val = sampler.sample(10_000, on_ratio=0.1)
-test_data = IL.data.make_tensor_dataset((test_pts, test_val))
+# test_pts, test_val = sampler.sample(2**14, on_ratio=0.1)
+# test_data = IL.data.make_tensor_dataset((test_pts, test_val))
 
 pc = M.mesh.from_arrays(points)
 pc.vertices.register_array_as_attribute("val", val)
@@ -42,32 +36,38 @@ M.mesh.save(pc, os.path.join(OUTPUT_DIR, "train_pts.geogram_ascii"))
 ###### Training 
 
 # setup model
-# model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 10).to(DEVICE)
+# model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 8).to(DEVICE)
 # model = IL.nn.DenseLipSDP(geometry.dim, 128, 6).to(DEVICE)
-model = IL.nn.SirenNet(geometry.dim, 128, 6).to(DEVICE)
+model = IL.nn.SirenNet(geometry.dim, 128, 5, init_type="winner").to(DEVICE)
 # model = IL.nn.QuaNet(geometry.dim, dim_hidden=64, n_layers=4, activation=IL.nn.siren.SinusActivation).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
 # Setup trainer
 config = TrainingConfig(
-    BATCH_SIZE = 10_000,
-    TEST_BATCH_SIZE = 50_000,
-    N_EPOCHS = 300,
-    LEARNING_RATE = 5e-4,
+    BATCH_SIZE = 2**15,
+    TEST_BATCH_SIZE = 2**16,
+    N_EPOCHS = 1000,
+    LEARNING_RATE = 1e-4,
     DEVICE = DEVICE,
-    OPTIMIZER = "adam",
+    OPTIMIZER = "muon",
+    COMPILE=True,
+    MATMUL_PRECISION="high"
 )
 
-trainer = IL.training.SimpleRegressionTrainer(config, lossfun=torch.nn.MSELoss())
+trainer = IL.training.SimpleRegressionTrainer(config)
 # trainer = IL.training.RegressionEikonalTrainer(config, eikonal_weight=1e-4)
 
-# trainer.add_scheduler(torch.optim.lr_scheduler.MultiStepLR, milestones=[300, 500, 700, 800, 900], gamma=0.5)
-trainer.add_callbacks(callbacks.LoggerCB(os.path.join(OUTPUT_DIR, "training_log.txt")))
+trainer.add_scheduler(torch.optim.lr_scheduler.CosineAnnealingLR, trainer.config.N_EPOCHS, eta_min=1e-7)
+trainer.add_callbacks(
+    callbacks.PrinterCB(), 
+    callbacks.ResampleCB(sampler, 2**20, on_ratio=0.2, freq=trainer.config.N_EPOCHS//2)
+)
 if geometry.dim == 2:
     trainer.add_callbacks(callbacks.Render2DCB(OUTPUT_DIR, 100, plot_domain=M.geometry.AABB([-1.2, -1.2], [1.2, 1.2])))
 elif geometry.dim == 3:
-    trainer.add_callbacks(callbacks.MarchingCubeCB(OUTPUT_DIR, 100, res=400, iso=0.))
-
+    trainer.add_callbacks(callbacks.MarchingCubeCB(OUTPUT_DIR, 100, res=256, iso=0.))
 trainer.set_training_data(train_data)
-trainer.set_test_data(test_data)
+# trainer.set_test_data(test_data)
+
 trainer.train(model)
+model.save(os.path.join(OUTPUT_DIR, "model.inr"))

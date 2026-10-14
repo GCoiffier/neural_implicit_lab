@@ -152,8 +152,9 @@ class ThinPlateLoss:
         - [https://github.com/GeometryArt/NeuVAS/tree/main/code](https://github.com/GeometryArt/NeuVAS/tree/main/code)
     """
 
-    def __call__(self, inp_tensor, out_tensor):
-        grad = gradient(inp_tensor, out_tensor)               
+    def __call__(self, inp_tensor, out_tensor, grad=None):
+        if grad is None:
+            grad = gradient(inp_tensor, out_tensor)
         gdx  = gradient(inp_tensor, grad[:, 0])
         gdy  = gradient(inp_tensor, grad[:, 1])
         gdz  = gradient(inp_tensor, grad[:, 2])

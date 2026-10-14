@@ -235,6 +235,8 @@ class MuonWithAuxAdam(torch.optim.Optimizer):
 class SingleDeviceMuonWithAuxAdam(torch.optim.Optimizer):
     """
     Non-distributed variant of MuonWithAuxAdam.
+
+    Parameters are updated with `torch._foreach_*` operations, and the Newton-Schulz orthogonalization is batched over all parameters sharing the same shape. This gives the same updates as applying `muon_update` and `adam_update` to each parameter separately, with far fewer kernel launches.
     """
     def __init__(self, param_groups):
         for group in param_groups:
@@ -263,31 +265,58 @@ class SingleDeviceMuonWithAuxAdam(torch.optim.Optimizer):
                 loss = closure()
 
         for group in self.param_groups:
+            for p in group["params"]:
+                if p.grad is None:
+                    p.grad = torch.zeros_like(p)  # Force synchronization
             if group["use_muon"]:
-                for p in group["params"]:
-                    if p.grad is None:
-                        # continue
-                        p.grad = torch.zeros_like(p)  # Force synchronization
-                    state = self.state[p]
-                    if len(state) == 0:
-                        state["momentum_buffer"] = torch.zeros_like(p)
-                    update = muon_update(p.grad, state["momentum_buffer"], beta=group["momentum"])
-                    p.mul_(1 - group["lr"] * group["weight_decay"])
-                    p.add_(update.reshape(p.shape), alpha=-group["lr"])
+                self._muon_step(group)
             else:
-                for p in group["params"]:
-                    if p.grad is None:
-                        # continue
-                        p.grad = torch.zeros_like(p)  # Force synchronization
-                    state = self.state[p]
-                    if len(state) == 0:
-                        state["exp_avg"] = torch.zeros_like(p)
-                        state["exp_avg_sq"] = torch.zeros_like(p)
-                        state["step"] = 0
-                    state["step"] += 1
-                    update = adam_update(p.grad, state["exp_avg"], state["exp_avg_sq"],
-                                         state["step"], group["betas"], group["eps"])
-                    p.mul_(1 - group["lr"] * group["weight_decay"])
-                    p.add_(update, alpha=-group["lr"])
+                self._adam_step(group)
 
         return loss
+
+    def _muon_step(self, group):
+        params_by_shape = dict()
+        for p in group["params"]:
+            state = self.state[p]
+            if len(state) == 0:
+                state["momentum_buffer"] = torch.zeros_like(p)
+            params_by_shape.setdefault(p.shape, []).append(p)
+        beta = group["momentum"]
+        for shape, params in params_by_shape.items():
+            grads = [p.grad for p in params]
+            momentums = [self.state[p]["momentum_buffer"] for p in params]
+            # Same as muon_update with nesterov=True, for all parameters of this shape at once
+            torch._foreach_lerp_(momentums, grads, 1 - beta)
+            torch._foreach_lerp_(grads, momentums, beta)
+            updates = torch.stack([g.view(len(g), -1) if g.ndim == 4 else g for g in grads])
+            updates = zeropower_via_newtonschulz5(updates, steps=5)
+            updates *= max(1, updates.size(-2) / updates.size(-1))**0.5
+            updates = [u.reshape(shape).to(p.dtype) for u, p in zip(updates.unbind(0), params)]
+            torch._foreach_mul_(params, 1 - group["lr"] * group["weight_decay"])
+            torch._foreach_add_(params, updates, alpha=-group["lr"])
+
+    def _adam_step(self, group):
+        params = group["params"]
+        if len(params) == 0: return
+        for p in params:
+            state = self.state[p]
+            if len(state) == 0:
+                state["exp_avg"] = torch.zeros_like(p)
+                state["exp_avg_sq"] = torch.zeros_like(p)
+                state["step"] = 0
+            state["step"] += 1
+        beta1, beta2 = group["betas"]
+        grads = [p.grad for p in params]
+        exp_avgs = [self.state[p]["exp_avg"] for p in params]
+        exp_avg_sqs = [self.state[p]["exp_avg_sq"] for p in params]
+        # Same as adam_update, for all parameters of the group at once
+        torch._foreach_lerp_(exp_avgs, grads, 1 - beta1)
+        torch._foreach_lerp_(exp_avg_sqs, torch._foreach_mul(grads, grads), 1 - beta2)
+        bias_corrections1 = [1 - beta1**self.state[p]["step"] for p in params]
+        bias_corrections2 = [1 - beta2**self.state[p]["step"] for p in params]
+        denom = torch._foreach_sqrt(torch._foreach_div(exp_avg_sqs, bias_corrections2))
+        torch._foreach_add_(denom, group["eps"])
+        updates = torch._foreach_div(torch._foreach_div(exp_avgs, bias_corrections1), denom)
+        torch._foreach_mul_(params, 1 - group["lr"] * group["weight_decay"])
+        torch._foreach_add_(params, updates, alpha=-group["lr"])

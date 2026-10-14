@@ -3,12 +3,6 @@ from torch.nn import functional as F
 from .base_trainer import Trainer
 
 class NeuralPullTrainer(Trainer):
-
-    def __init__(self, config):
-        super().__init__(config)
-
-    def get_optimizer(self, model):
-        return torch.optim.Adam(model.parameters(), lr=1e-3)
         
     def forward_test_batch(self, data, model):
         # same as train

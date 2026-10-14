@@ -2,8 +2,6 @@ import os, sys
 import mouette as M
 import numpy as np
 
-import torch
-
 import implicitlab as IL
 from implicitlab.data import PointSampler
 from implicitlab.training import TrainingConfig, hKRTrainer, callbacks
@@ -24,9 +22,10 @@ train_field = IL.fields.Occupancy(geometry, v_in=-1, v_out=1, v_on=-1)
 train_sampling_strat = IL.sampling_strategies.CombinedStrategy([
     IL.sampling_strategies.UniformBox(geometry),
     IL.sampling_strategies.NearGeometryGaussian(geometry, 0.02)
-], [1., 9.])
+], [1., 1.])
+# train_sampling_strat = IL.sampling_strategies.UniformBox(geometry)
 train_sampler = PointSampler(geometry, train_sampling_strat, train_field)
-points, val = train_sampler.sample(30_000 if geometry.dim==2 else 300_000)
+points, val = train_sampler.sample(2**20, on_ratio=0.)
 
 # Balance the dataset : as many inside points that there are outside points
 points_pos = points[val>0, :]
@@ -48,18 +47,24 @@ M.mesh.save(pc, os.path.join(OUTPUT_DIR, "train_pts.geogram_ascii"))
 M.mesh.save(geometry, os.path.join(OUTPUT_DIR, "input_geometry.obj"))
 
 # testing data
-test_field = IL.fields.Distance(geometry, signed=True)
-test_sampling_strat = IL.sampling_strategies.UniformBox(geometry)
-test_sampler = PointSampler(geometry, test_sampling_strat, test_field)
-test_pts, test_val = test_sampler.sample(10_000)
-test_data = IL.data.make_tensor_dataset((test_pts, test_val))
+# test_field = IL.fields.Distance(geometry, signed=True)
+# test_sampling_strat = IL.sampling_strategies.UniformBox(geometry)
+# test_sampler = PointSampler(geometry, test_sampling_strat, test_field)
+# test_pts, test_val = test_sampler.sample(2**13)
+# test_data = IL.data.make_tensor_dataset((test_pts, test_val))
 
 
 ###### Training
-# model = IL.nn.DenseLipBjorck(geometry.dim, 128, 12).to(DEVICE)
-# model = IL.nn.DenseLipAOL(geometry.dim, 128, 12).to(DEVICE)
-# model = IL.nn.DenseLipCPL(geometry.dim, 128, 12).to(DEVICE)
-model = IL.nn.DenseLipSDP(geometry.dim, 128, 12).to(DEVICE)
+if geometry.dim == 2:
+    n_layers, layer_size = 10, 64
+elif geometry.dim == 3:
+    n_layers, layer_size = 12, 128
+
+
+# model = IL.nn.DenseLipBjorck(geometry.dim, layer_size, n_layers).to(DEVICE)
+# model = IL.nn.DenseLipAOL(geometry.dim, layer_size, n_layers2).to(DEVICE)
+# model = IL.nn.DenseLipCPL(geometry.dim, layer_size, n_layers).to(DEVICE)
+model = IL.nn.DenseLipSDP(geometry.dim, layer_size, n_layers).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
 
 
@@ -79,29 +84,34 @@ class UpdateHkrRegulCB(callbacks.Callback):
 MARGIN = 0.01
 
 trainer = hKRTrainer(TrainingConfig(
-    BATCH_SIZE=10_000,
-    TEST_BATCH_SIZE=50_000,
-    N_EPOCHS=500,
-    LEARNING_RATE=3e-4,
+    BATCH_SIZE=2**15,
+    TEST_BATCH_SIZE=2**17,
+    N_EPOCHS=3000,
+    LEARNING_RATE=1e-4,
     DEVICE=DEVICE,
-    OPTIMIZER="muon"), 
+    OPTIMIZER="adam",
+    MATMUL_PRECISION="high",
+    COMPILE=True
+    ),
     margin=MARGIN, 
-    lmbd=10.
+    lmbd=100.
 )
 
 trainer.add_callbacks(
-    callbacks.LoggerCB(os.path.join(OUTPUT_DIR, "training_log.txt")),
+    callbacks.PrinterCB(),
+    # callbacks.LoggerCB(os.path.join(OUTPUT_DIR, "training_log.txt")),
     # callbacks.CheckpointCB("output", [x for x in range(config.N_EPOCHS) if x%50==0]),
-    UpdateHkrRegulCB({100: 100. , 300 : 1000.})
+    # UpdateHkrRegulCB({500: 100., 2000: 1000.})
 )
 
 if geometry.dim == 2:
-    trainer.add_callbacks(callbacks.Render2DCB(OUTPUT_DIR, 100))
+    trainer.add_callbacks(callbacks.Render2DCB(OUTPUT_DIR, 500, n_contours=31))
 elif geometry.dim == 3:
-    trainer.add_callbacks(callbacks.MarchingCubeCB(OUTPUT_DIR, 100, res=256, iso=[-MARGIN/2, 0]))
+    trainer.add_callbacks(callbacks.MarchingCubeCB(OUTPUT_DIR, 500, res=256, iso=0))
+# trainer.add_scheduler(CosineAnnealingLR, trainer.config.N_EPOCHS, 1e-3*trainer.config.LEARNING_RATE)
 
 trainer.set_training_data(train_data)
-trainer.set_test_data(test_data)
+# trainer.set_test_data(test_data)
 trainer.train(model)
 
 model.save(os.path.join(OUTPUT_DIR, "model.inr"))

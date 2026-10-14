@@ -33,9 +33,10 @@ class hKRTrainer(Trainer):
 
     def forward_test_batch(self, data, model):
         if self.testlossfun is None: return None
-        X,Y_target = data
-        Y = model(X)
-        return torch.sum(self.testlossfun(Y, Y_target))
+        with torch.no_grad():
+            X,Y_target = data
+            Y = model(X)
+            return torch.sum(self.testlossfun(Y, Y_target))
 
     def forward_train_batch(self, data, model):
         X,occ = data

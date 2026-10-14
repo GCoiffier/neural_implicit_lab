@@ -37,16 +37,16 @@ def render_sdf_2d(render_path, contour_path, gradient_path, model, domain: M.geo
         n_contours (int, optional): Defaults to 16.    
     """
     assert domain.dim == 2
-    _model = prepare_model(model, device)
+    # _model = prepare_model(model, device)
     resY = round(res * domain.span[1]/domain.span[0])
     pts = generate_regular_grid(domain, (res, resY), device)
     if gradient_path is not None:
         dist_values,grad_values = forward_in_batches(
-            _model, pts, device, 
-            compute_grad=True, batch_size=batch_size)
+            model, pts, device, 
+            compute_grad=True, batch_size=batch_size, full_precision=False)
         grad_values = grad_values.cpu().numpy()
     else:
-        dist_values = forward_in_batches(_model, pts, device, compute_grad=False, batch_size=batch_size)
+        dist_values = forward_in_batches(model, pts, device, compute_grad=False, batch_size=batch_size, full_precision=False)
     dist_values = dist_values.cpu().numpy()
     img = dist_values.reshape((res,resY)).T
     img = img[::-1,:]

@@ -18,8 +18,8 @@ def pseudo_surface_from_polyline(pl: M.mesh.PolyLine):
     """
     nv = len(pl.vertices)
     bary = M.attributes.barycenter(pl)
-    bary1 = M.Vec(bary.x, bary.y, 100)
-    bary2 = M.Vec(bary.x, bary.y, -100)
+    bary1 = M.Vec(bary.x, bary.y, 1)
+    bary2 = M.Vec(bary.x, bary.y, -1)
     V = list(pl.vertices)+[bary1,bary2]
     F = []
     for a,b in pl.edges:
@@ -29,14 +29,14 @@ def pseudo_surface_from_polyline(pl: M.mesh.PolyLine):
         else:
             F += [(a,b,nv), (b,a,nv+1)]
     ### Correctly orient normals outward
-    ref = M.Vec(-1., 0., 0.) # point outside of the mesh
+    ref = M.Vec(2., 0., 0.) # point outside of the mesh
     volume = 0.
     for (A,B,C) in F:
         pA,pB,pC = V[A], V[B], V[C]
         volume += M.geometry.det_3x3(pB-pA, ref-pA, pC-pA)
     if volume<0:
         F = [(b,a,c) for (a,b,c) in F] # change order of faces
-    return np.array(V), np.array(F, dtype=int)
+    return np.asarray(V), np.asarray(F, dtype=int)
 
 def extrude_2D_polyline(pl : M.mesh.PolyLine, z: float =1.):
     """Extrudes a 2D polyline along the z axis to form a ribbon mesh.

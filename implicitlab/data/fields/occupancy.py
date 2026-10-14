@@ -20,7 +20,7 @@ def Occupancy(geom : M.mesh.Mesh, v_in:float, v_out:float, v_on:float):
     """
     match geom.geom_type:
         # case GeometryType.POINT_CLOUD_2D:
-        #     return
+        #     return _Occupancy2DPointCloud(geom, v_in, v_out, v_on)
         case GeometryType.POLYLINE_2D:
             return _Occupancy2D(geom, v_in, v_out, v_on)
         # case GeometryType.POINT_CLOUD_3D:
@@ -51,6 +51,8 @@ class _Occupancy2D(_BaseOccupancy):
         self.V, self.F = pseudo_surface_from_polyline(geom)
 
     def compute(self, query : np.ndarray) -> np.ndarray:
+        if query.shape[1]==2:
+            query = np.hstack((query, np.zeros((query.shape[0], 1))))
         wn = igl.fast_winding_number(self.V, self.F, query)
         occ = np.where(wn>=0.5, self.v_in, self.v_out)
         return occ

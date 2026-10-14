@@ -8,8 +8,10 @@ from implicitlab.training.losses import EikonalLoss, ThinPlateLoss
 from implicitlab.training import TrainingConfig,Trainer
 from implicitlab.training import callbacks
 
-os.makedirs("output", exist_ok=True)
+OUTPUT_DIR = "output"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 geometry = IL.load_geometry(sys.argv[1])
+geometry = IL.data.extract_boundary_polyline_from_2D_mesh(geometry)
 print(geometry.geom_type)
 
 DEVICE = IL.utils.get_device()
@@ -18,15 +20,14 @@ DEVICE = IL.utils.get_device()
 
 points = np.asarray(geometry.vertices)
 pc = M.mesh.from_arrays(points)
-M.mesh.save(pc, "output/train_pts.geogram_ascii")
-train_data = IL.data.make_tensor_dataset((points,), DEVICE)
+M.mesh.save(pc, os.path.join(OUTPUT_DIR, "train_pts.geogram_ascii"))
+train_data = IL.data.make_tensor_dataset((points,))
 
 ###### Training 
 
 # Setup model
 model = IL.nn.MultiLayerPerceptron(geometry.dim, 128, 6, activ=torch.nn.Softplus).to(DEVICE)
 print(f"{IL.nn.count_parameters(model)} parameters")
-
 
 # Setup trainer
 class ThinPlateTrainer(Trainer):
@@ -49,36 +50,39 @@ class ThinPlateTrainer(Trainer):
     def forward_test_batch(self, data, model): pass
     
     def forward_train_batch(self, data, model):
-        pts, = data
-        pts.requires_grad = True
-        Y_on = model(pts)
-        batch_loss = self.weights["on"] * torch.mean(torch.abs(Y_on))
-
-        pts_out = 3*torch.rand_like(pts)-1
+        pts_on, = data
+        pts_on.requires_grad = True
+        pts_out = 3*torch.rand_like(pts_on)-1.5
         pts_out.requires_grad = True
-        Y_out = model(pts_out)
-        batch_loss += self.weights["out"] * torch.mean(torch.exp(- self.rho * torch.abs(Y_out)))
+        pts_all = torch.cat((pts_on, pts_out))
+        n = pts_on.shape[0]
 
-        # batch_loss += self.weights["thinplate"] * ThinPlateLoss()(pts, Y_on)
+        values = model(pts_all)
+        grad = torch.autograd.grad(values.sum(), pts_all, create_graph=True)[0]
         
-        batch_loss += self.weights["eikonal"] * EikonalLoss()(pts_out, Y_out)        
+        values_on, values_out = values[:n], values[n:]
+        grad_on, grad_out = grad[:n], grad[n,:]
+        batch_loss = self.weights["on"] * torch.mean(torch.abs(values_on))
+        batch_loss += self.weights["out"] * torch.mean(torch.exp(- self.rho * torch.abs(values_out)))
+        batch_loss += self.weights["thinplate"] * ThinPlateLoss()(pts_on, values_on, grad_on)
+        batch_loss += self.weights["eikonal"] * EikonalLoss(pts_out, values_out, grad_out)  
         return batch_loss
 
 
 trainer = ThinPlateTrainer(TrainingConfig(
-    BATCH_SIZE=200,
-    TEST_BATCH_SIZE = 5000,
-    N_EPOCHS=1200,
-    LEARNING_RATE=1e-4,
-    DEVICE=DEVICE
+    BATCH_SIZE = 2**12,
+    TEST_BATCH_SIZE = 2**15,
+    N_EPOCHS = 5000,
+    LEARNING_RATE = 1e-4,
+    DEVICE = DEVICE
 ))
 
-trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
+trainer.add_callbacks(callbacks.PrinterCB())
 if geometry.dim == 2:
-    trainer.add_callbacks(callbacks.Render2DCB("output", 50))
+    trainer.add_callbacks(callbacks.Render2DCB("output", 500))
 elif geometry.dim == 3:
-    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 300, res=100, iso=0.))
+    trainer.add_callbacks(callbacks.MarchingCubeCB("output", 500, res=256, iso=0.))
 trainer.set_training_data(train_data)
 trainer.train(model)
 
-IL.nn.save_model(model, "output/model.pt")
+model.save(os.path.join(OUTPUT_DIR, "model.inr"))

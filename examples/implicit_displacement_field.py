@@ -33,7 +33,7 @@ DEVICE = IL.utils.get_device()
 assert geometry.dim == 3
 
 points, normals = M.sampling.sample_surface(geometry, args.n_points, return_normals=True)
-train_data = IL.data.make_tensor_dataset((points, normals), DEVICE)
+train_data = IL.data.make_tensor_dataset((points, normals))
 
 pc = M.mesh.from_arrays(points)
 M.mesh.save(pc, "output/train_pts.geogram_ascii")
@@ -121,8 +121,8 @@ class KappaUpdateCallback(callbacks.Callback):
 
 
 trainer = ImplicitSurfaceTrainer(TrainingConfig(
-    BATCH_SIZE = 4096,
-    TEST_BATCH_SIZE = 10_000,
+    BATCH_SIZE = 2**12,
+    TEST_BATCH_SIZE = 2**16,
     N_EPOCHS=args.n_epochs,
     LEARNING_RATE=5e-5,
     DEVICE=DEVICE
@@ -130,9 +130,11 @@ trainer = ImplicitSurfaceTrainer(TrainingConfig(
 
 TRAIN_PERCENT = 0.2
 
-trainer.add_callbacks(callbacks.LoggerCB("output/training_log.txt"))
-trainer.add_callbacks(callbacks.MarchingCubeCB("output", int(args.n_epochs*TRAIN_PERCENT), res=400, iso=[0., 0.05]))
-trainer.add_callbacks(KappaUpdateCallback(TRAIN_PERCENT, args.n_epochs))
+trainer.add_callbacks(
+    callbacks.PrinterCB("output/training_log.txt"),
+    callbacks.MarchingCubeCB("output", int(args.n_epochs*TRAIN_PERCENT), res=400, iso=[0., 0.05]),
+    KappaUpdateCallback(TRAIN_PERCENT, args.n_epochs)
+)
 trainer.set_training_data(train_data)
 trainer.train(model)
 
@@ -141,5 +143,3 @@ print("KAPPA", model.kappa)
 # iso_surfaces = IL.visualize.reconstruct_surface_marching_cubes(model, plot_domain, DEVICE, iso=[0., 0.01, 0.05, 0.1], res=400, batch_size=10_000, use_tqdm=True)
 # for (n,off),mesh in iso_surfaces.items():
 #     M.mesh.save(mesh, os.path.join("output", f"e_final_iso{round(1000*off)}.obj"))
-
-torch.save(model.state_dict(), f"output/idf.pt")

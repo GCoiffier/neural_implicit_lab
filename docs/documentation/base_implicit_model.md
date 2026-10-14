@@ -2,7 +2,7 @@
 title: ImplicitModel
 ---
 
-:::implicitlab.nn.implicitmodel
+:::implicitlab.nn.implicit_model
     options:
         heading_level: 2
         inherited_members: false

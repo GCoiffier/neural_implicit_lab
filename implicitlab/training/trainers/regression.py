@@ -5,27 +5,20 @@ from ..losses import EikonalLoss
 
 class SimpleRegressionTrainer(Trainer):
     """
-    A simple trainer that performs regression between the output of a model and some ground truth values.
+    A simple trainer that performs mean square error regression between the output of a model and some ground truth values.
     """
-    def __init__(self, config, lossfun = F.mse_loss):
-        """
-        Args:
-            config (TrainingConfig): The training hyperparameters.
-            lossfun (Callable): the loss function to consider. Defaults is `torch.nn.functional.mse_loss`
-        """
-        super().__init__(config)
-        self.lossfun = lossfun
 
     def forward_test_batch(self, data, model):
         with torch.no_grad():
             X,Y_target = data
             Y = model(X)
-            return self.lossfun(Y, Y_target)
+            return F.mse_loss(Y, Y_target)
 
     def forward_train_batch(self, data, model):
         X,Y_target = data
         Y = model(X)
-        return self.lossfun(Y, Y_target)
+        return F.mse_loss(Y, Y_target)
+        return torch.mean((Y-Y_target)**2) #self.lossfun(Y, Y_target)
     
 
 class RegressionEikonalTrainer(Trainer):
@@ -45,9 +38,10 @@ class RegressionEikonalTrainer(Trainer):
         self.eikonal_weight: float = eikonal_weight
 
     def forward_test_batch(self, data, model):
-        X,Y_target = data
-        Y = model(X)
-        return F.mse_loss(Y, Y_target)
+        with torch.no_grad():
+            X,Y_target = data
+            Y = model(X)
+            return F.mse_loss(Y, Y_target)
 
     def forward_train_batch(self, data, model):
         X,Y_target = data

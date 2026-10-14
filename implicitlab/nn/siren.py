@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 import numpy as np
+from .implicit_model import ImplicitModel
 
 class SinusActivation(nn.Module):
     """
@@ -180,42 +181,24 @@ class SirenGeometricInitializer:
         m.weight.data += torch.randn_like(m.weight.data)*self.s/self.w0
 
 
-def SirenNet(
-    dim_in: int, 
-    dim_hidden: int, 
-    n_layers: int, 
-    dim_out: int =1, 
-    w0: float = 6.,
-    w0_first_layer : float = 30.,
-    residual: bool = False,
-    init_type="siren",
-    activation_type="siren",
-    ):
+class SirenNet(ImplicitModel):
     """
-    
-    Code adapted from [https://github.com/MClemot/SkeletonLearning/blob/main/siren_nn.py](https://github.com/MClemot/SkeletonLearning/blob/main/siren_nn.py)
+    Implementation of a SIREN network, that is a multilayer perceptron with periodic activation functions [1].
 
-    Args:
-        dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
-        dim_hidden (int): dimension of the hidden layers.
-        n_layers (int): number of hidden layers.
-        dim_out (int, optional): dimension of the output layers. Defaults to 1.
-        w0 (float, optional): Frequency of the activation function. Defaults to 6.
-        w0_first_layer (float, optional): Frequency of the activation function in the first layer. Defaults to 30.
-        residual (bool, optional): Whether to include residual connections between each layer. Defaults to False.
-        init_type (str, optional): Initialization scheme to consider for the network's weights. Choices are:
-            - "siren": the original SIREN initialization scheme [1]  
-            - "geometric": geometric initialization scheme [4]  
-            - "mfgi": multi-frequency geometric initialization scheme [5]  
-            - "winner": initialization proposed by WINNER [6]  
-            Defaults to "siren".
-        activation_type (str, optional): Which activation to choose for the network (case insensitive). Choices are:
-            - "siren": the original SIREN activation [1]
-            - "finer": activation proposed by FINER [2]  
-            - "lsa": learnable spectral activation [3]  
-            - "id" : identity (no activation)  
-            Defaults to "sine".
-    
+    Alongside the base implementation from [1], several improvements published over the years are also available. They consist of either an initialization scheme, or a different activation function.
+
+    Activation functions available are:
+        - "siren": the original SIREN activation [1]  
+        - "finer": sin((|x|+1)x) activation proposed by FINER [2]  
+        - "lsa": learnable spectral activation [3]  
+        - "id" : identity (no activation, usually used in the last layer)  
+
+    Initialization schemes available are:
+        - "siren": the original SIREN initialization scheme [1]  
+        - "geometric": geometric initialization scheme [4]  
+        - "mfgi": multi-frequency geometric initialization scheme [5]  
+        - "winner": initialization proposed by WINNER [6]  
+
     References:
         [1] _Implicit Neural Representations with Periodic Activation Functions_, Sitzmann et al., 2020  
         [2] _FINER: Flexible spectral-bias tuning in Implicit NEural Representation by Variable-periodic Activation Functions_, Liu et al., 2023  
@@ -223,22 +206,47 @@ def SirenNet(
         [4] _DiGS : Divergence guided shape implicit neural representation for unoriented  point clouds_, Y.Ben-Shabat et al., 2022  
         [5] _Improving Accuracy and Efficiency of Implicit Neural Representations: Making SIREN a WINNER_, H.Chandravamsi et al., 2026
     """
-    layers = []
-    # First dim_in -> dim_hidden layer
-    layers.append(SirenLayer(dim_in, dim_hidden, w0_first_layer, is_first_layer=True, activation=activation_type))
-    # Intermediate dim_hidden -> dim_hidden layers
-    for _ in range(n_layers-1):
-        layers.append(SirenLayer(dim_hidden, dim_hidden, w0, residual=residual, activation=activation_type))
-    # last dim_hidden->1 layer has no activation
-    layers.append(SirenLayer(dim_in = dim_hidden, dim_out = dim_out, w0 = w0, activation="id"))
-    model = nn.Sequential(*layers)
 
-    # Apply initialization
-    if init_type.lower() != "siren":
-        initializer = SirenGeometricInitializer(init_type.lower())
-        initializer.apply(model)
+    def __init__(self,
+        dim_in: int, 
+        dim_hidden: int, 
+        n_layers: int, 
+        dim_out: int =1, 
+        w0: float = 6.,
+        w0_first_layer : float = 30.,
+        residual: bool = False,
+        init_type="siren",
+        activation_type="siren",
+    ):
+        """ 
+        Args:
+            dim_in (int): dimension of the input vector. Usually 2 or 3 for neural implicits.
+            dim_hidden (int): dimension of the hidden layers.
+            n_layers (int): number of hidden layers.
+            dim_out (int, optional): dimension of the output layers. Defaults to 1.
+            w0 (float, optional): Frequency of the activation function. Defaults to 6.
+            w0_first_layer (float, optional): Frequency of the activation function in the first layer. Defaults to 30.
+            residual (bool, optional): Whether to include residual connections between each layer. Defaults to False.
+            init_type (str, optional): Initialization scheme to consider for the network's weights (case insensitive). Choices are `"siren", "geometric", "mfgi", "winner"`.
+            activation_type (str, optional): Which activation to choose for the network (case insensitive). Choices are `"siren", "finer", "lsa", "id"`. Defaults to "siren".
+        """
+        super().__init__()
+        layers = []
+        # First dim_in -> dim_hidden layer
+        layers.append(SirenLayer(dim_in, dim_hidden, w0_first_layer, is_first_layer=True, activation=activation_type))
+        # Intermediate dim_hidden -> dim_hidden layers
+        for _ in range(n_layers-1):
+            layers.append(SirenLayer(dim_hidden, dim_hidden, w0, residual=residual, activation=activation_type))
+        # last dim_hidden->1 layer has no activation
+        layers.append(SirenLayer(dim_in = dim_hidden, dim_out = dim_out, w0 = w0, activation="id"))
+        self.model = nn.Sequential(*layers)
 
-    return model
+        # Apply initialization
+        if init_type.lower() != "siren":
+            initializer = SirenGeometricInitializer(init_type.lower())
+            initializer.apply(self.model)
+            
+    def forward(self , x): return self.model(x)
 
 
 

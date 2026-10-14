@@ -65,8 +65,8 @@ def sample_geometry_with_normals(geometry, n_pts: int):
     Raises:
         Exception: fails if the provided geometry is not a 3D surface mesh or a 2D polyline
     """
-    if geometry.type not in (GeometryType.SURFACE_MESH_3D, GeometryType.POLYLINE_2D):
-        raise Exception(f"Geometry Type {geometry.type} is not supported. Please provide a 3D surface mesh or a 2D polyline.")
+    if geometry.geom_type not in (GeometryType.SURFACE_MESH_3D, GeometryType.POLYLINE_2D):
+        raise Exception(f"Geometry Type {geometry.geom_type} is not supported. Please provide a 3D surface mesh or a 2D polyline.\n If your geometry has type SURFACE_MESH_2D, consider using the `implicitlab.data.extract_boundary_polyline_from_2D_mesh` utility function.")
     if geometry.dim == 3:
         points, normals = M.sampling.sample_surface(geometry, n_pts, return_normals=True)
     elif geometry.dim == 2:

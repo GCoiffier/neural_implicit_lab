@@ -45,20 +45,47 @@ class LoggerCB(Callback):
         self.logged.update({"epoch" :  trainer.metrics["epoch"]})
         self.logged.update({"time" :  trainer.metrics["epoch_time"]})
         self.logged.update({"train_loss" : trainer.metrics["train_loss"]})
-        print(f"Train loss after epoch {trainer.metrics['epoch']} : {trainer.metrics['train_loss']}")
         if trainer.test_data_loader is None:
             # no test_data_loader means that callOnEndTest will not be called.
             self._write_log()
 
     def callOnEndTest(self, trainer, model: "ImplicitModel"):
         self.logged.update({"test_loss" : trainer.metrics["test_loss"]})
-        print(f"Test loss after epoch {trainer.metrics['epoch']} : {trainer.metrics['test_loss']}\n")
         self._write_log()
 
     def _write_log(self):
         with open(self.path, "a") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.logged.keys())
             writer.writerow(self.logged)
+
+
+class PrinterCB(Callback):
+    """Prints training progress onto the terminal.
+
+    Args:
+        file_path (str): path to the log text file.
+        single_line (bool, optional): whether to replace the current line or to print a new line after each epoch
+    """
+    def __init__(self, single_line:bool = False):
+        super().__init__()
+        print()
+        self.end_line_char = "\r" if single_line else "\n"
+        self.outputs = []
+
+    def callOnBeginEpoch(self, trainer, model):
+        self.outputs = []
+
+    def callOnEndEpoch(self, trainer, model: "ImplicitModel"):
+        self.outputs = [
+            f"Epoch {trainer.metrics['epoch']}/{trainer.config.N_EPOCHS}",
+            f"Time: {round(1000*trainer.metrics['epoch_time']):03}ms",
+            f"Train loss: {trainer.metrics['train_loss']:.4E}"
+        ] + self.outputs
+        print(" | ".join(self.outputs), end=self.end_line_char)
+
+    def callOnEndTest(self, trainer, model: "ImplicitModel"):
+        if trainer.test_data_loader is not None:
+            self.outputs.append( f"Test loss : {trainer.metrics['test_loss']:.4E}")
 
 class CheckpointCB(Callback):
 
