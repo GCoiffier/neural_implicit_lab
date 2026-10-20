@@ -47,10 +47,10 @@ print(f"{IL.nn.count_parameters(model)} parameters")
 config = TrainingConfig(
     BATCH_SIZE = 2**15,
     TEST_BATCH_SIZE = 2**16,
-    N_EPOCHS = 1000,
+    N_EPOCHS = 5000,
     LEARNING_RATE = 1e-4,
     DEVICE = DEVICE,
-    OPTIMIZER = "muon",
+    OPTIMIZER = "adam",
     COMPILE=True,
     MATMUL_PRECISION="high"
 )

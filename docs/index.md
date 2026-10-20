@@ -1,5 +1,6 @@
 ---
 title: ImplicitLab
+render_macros: true
 ---
 
 # ImplicitLab
@@ -51,4 +52,4 @@ Implicitlab currently depends on the following libraries:
 
 Here is a list of relevant articles partially or completely implemented in the library:
 
-\full_bibliography
+{{ bibliography() }}

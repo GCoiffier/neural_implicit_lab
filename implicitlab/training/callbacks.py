@@ -4,6 +4,7 @@ import mouette as M
 import os
 import csv
 import torch
+import meshio
 
 class Callback:
     """
@@ -217,8 +218,11 @@ class MarchingCubeCB(Callback):
                 full_precision = self.full_precision
             )
             for (n,off),mesh in iso_surfaces.items():
-                M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_iso{round(1000*off)}.obj"))
-                # M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_n{n:02d}_iso{round(1000*off)}.obj"))
+                path_to_save = os.path.join(self.save_folder, self.prefix+f"e{epoch:04d}_iso{round(1000*off)}.obj")
+                if isinstance(mesh, meshio.Mesh):
+                    mesh.write(path_to_save)
+                elif isinstance(mesh, M.mesh.Mesh):
+                    M.mesh.save(mesh, path_to_save)
             # except Exception as e:
             #     print("[ERROR] Marching Cube Callback:", e)
             #     pass
@@ -236,7 +240,11 @@ class MarchingCubeCB(Callback):
             trainer.config.TEST_BATCH_SIZE,
             use_tqdm=True)
         for (n,off),mesh in iso_surfaces.items():
-            M.mesh.save(mesh, os.path.join(self.save_folder, self.prefix+f"final_iso{round(1000*off)}.obj"))
+            path_to_save = os.path.join(self.save_folder, self.prefix+f"final_iso{round(1000*off)}.obj")
+            if isinstance(mesh, meshio.Mesh):
+                mesh.write(path_to_save)
+            elif isinstance(mesh, M.mesh.Mesh):
+                M.mesh.save(mesh, path_to_save)
 
 
 

@@ -9,10 +9,12 @@ This page lists the neural network models and components that are available in t
 :::implicitlab.nn.mlp
     options:
         heading_level: 3
+        inherited_members: false
 
 :::implicitlab.nn.siren
     options:
         heading_level: 3
+        inherited_members: false
         members:
             - SirenNet
 
@@ -23,12 +25,14 @@ This page lists the neural network models and components that are available in t
 :::implicitlab.nn.tailed_mlp
     options:
         heading_level: 3
+        inherited_members: false
 
 :::implicitlab.nn.quanet
     options:
         heading_level: 3
-    members:
-        - QuaNet
+        inherited_members: false
+        members:
+            - QuaNet
 
 ## Lipschitz Architectures
 
@@ -41,24 +45,9 @@ The signed distance function is notoriously a 1-Lipschitz function, and using 1-
 :::implicitlab.nn.lipschitz
     options:
         heading_level: 3
-
-
-## Positional encodings
-
-Positional encodings are fixed transformations applied to the input data before being fed into a neural network. They increase the model's accuracy by tackling low-frequency biases. When defining a neural model, simply use a `torch.nn.Sequential` object to add your encoding before your neural network. Note that the encoding size and the input dimension of the network should match:
-
-```python
-# Add an encoding made of Fourier Features to a simple multi-layer perceptron
-model = torch.nn.Sequential(
-    RandomFourierEncoding(geometry,1000),
-    MultiLayerPerceptron(1000, 128, 4)
-)
-```
-
-:::implicitlab.nn.encodings
-    options:
-        heading_level: 3
-
+        inherited_members: false
+        filters:
+            - "!parameter_singular_values"
 
 
 ## Utilities
@@ -66,6 +55,7 @@ model = torch.nn.Sequential(
 :::implicitlab.nn.utils
     options:
         heading_level: 3
+        inherited_members: false
 
 
 :::implicitlab.nn.lipschitz

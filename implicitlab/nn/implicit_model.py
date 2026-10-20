@@ -114,15 +114,16 @@ def load_model(path: str, map_location: str = "cpu") -> ImplicitModel:
 
     ```python
     # The two lines below are equivalent:
-    model = IL.nn.load_model("path/to/model.inr")
-    model = IL.ImplicitModel.load("path/to/model.inr")
+    model = IL.load_model("path/to/model.inr")
+    model = IL.nn.ImplicitModel.load("path/to/model.inr")
     ```
     """
     return ImplicitModel.load(path, map_location)
 
 
 class ImplicitSequential(ImplicitModel):
-    """Chains several models, for instance an input encoding followed by a network:
+    """Equivalent of `torch.nn.Sequential` but with the implicitlab's save/load feature.
+    Chains several models, for instance an input encoding followed by a network:
 
     ```python
     model = ImplicitSequential(
@@ -131,8 +132,11 @@ class ImplicitSequential(ImplicitModel):
     )
     ```
     """
-
     def __init__(self, *models: nn.Module):
+        """
+        Args:
+            *models (nn.Module): models being part of the sequence.
+        """
         super().__init__()
         self.seq_models = nn.Sequential(*models)
 

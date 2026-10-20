@@ -1,9 +1,19 @@
 site_name: ImplicitLab
 
 theme: 
-  # name: readthedocs
-  name: material
-  
+  palette: 
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: lucide/sun
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: lucide/moon
+        name: Switch to light mode
+
   features:
     - navigation.instant
     #- navigation.tabs
@@ -38,9 +48,9 @@ plugins:
     warning: true
     reverse: false
     headless_included: false
-- bibtex:
-    bib_file: "docs/bibliography.bib"
-    csl_file: "docs/apa-eu.csl"
+- macros:
+    module_name: docs/docs_macros
+    render_by_default: false
 
 
 markdown_extensions:
@@ -67,12 +77,9 @@ extra_javascript:
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
-extra_css:
-  - "custom_css.css"
 
 repo_url: https://github.com/GCoiffier/neural_implicit_lab
 repo_name: GCoiffier/neural_implicit_lab
-
 
 nav:
   - Home: "index.md"
@@ -91,6 +98,7 @@ nav:
     - implicitlab.nn:
       - "documentation/base_implicit_model.md"
       - "documentation/nn_architectures.md"
+      - "documentation/positional_encodings.md"
     - implicitlab.training:
       - "documentation/trainer.md"
       - "documentation/callbacks.md"

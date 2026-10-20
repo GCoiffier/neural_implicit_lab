@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+permissions:
+  contents: write
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -11,16 +13,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.13
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
-      - uses: actions/cache@v4
-        with:
-          key: mkdocs-material-${{ env.cache_id }}
-          path: .cache
-          restore-keys: |
-            mkdocs-material-
-      - run: sudo apt-get update && sudo apt-get install -y pandoc
-      - run: pip3 install mkdocs-material mkdocstrings mkdocstrings[python] mkdocs-nav-weight mkdocs-bibtex
+      - run: pip3 install zensical mkdocstrings mkdocstrings-python pybtex ghp-import
       - run: pip3 install --editable .
-      - run: echo `mkdocs --version`
-      - run: mkdocs gh-deploy --force
-
+      - run: zensical --version
+      - run: zensical build --clean
+      - run: ghp-import --no-jekyll --push --force site

@@ -1,4 +1,4 @@
-from .implicit_model import load_model, ImplicitModel, ImplicitSequential
+from .implicit_model import ImplicitModel, ImplicitSequential
 from .utils import *
 
 from .mlp import MultiLayerPerceptron, MultiLayerPerceptronSkips

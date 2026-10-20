@@ -1,5 +1,6 @@
 import numpy as np
 import mouette as M
+import meshio
 import torch
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -239,8 +240,11 @@ def reconstruct_surface_marching_cubes(
         except ValueError:
             continue
         verts += domain.mini
-        m = M.mesh.from_arrays(verts, F=faces)
-        m.vertices.register_array_as_attribute("normals",normals)
-        m.vertices.register_array_as_attribute("values", values)
+        m = meshio.Mesh(
+            verts, cells = [("triangle", faces)]
+        )
+        # m = M.mesh.from_arrays(verts, F=faces)
+        # m.vertices.register_array_as_attribute("normals",normals)
+        # m.vertices.register_array_as_attribute("values", values)
         to_save[(ioff, off)] = m
     return to_save
