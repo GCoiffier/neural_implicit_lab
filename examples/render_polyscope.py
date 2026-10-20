@@ -4,7 +4,7 @@ import sys
 import torch
 
 DEVICE = IL.utils.get_device()
-inr = IL.nn.load_model(sys.argv[1]).to(DEVICE)
+inr = IL.load_model(sys.argv[1]).to(DEVICE)
 inr = torch.compile(inr)
 
 ps.init()

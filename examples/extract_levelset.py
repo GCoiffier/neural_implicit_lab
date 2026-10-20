@@ -16,7 +16,7 @@ DEVICE = IL.utils.get_device()
 if not torch.cuda.is_available():
     warnings.warn("Pytorch does not have access to cuda and falls back to CPU mode. Forward computation of the grid values may take a long time.")
 
-model = IL.nn.load_model(args.inr).to(DEVICE)
+model = IL.load_model(args.inr).to(DEVICE)
 model = model.eval()
 domain = M.geometry.AABB([-1.1]*3, [1.1]*3)
 data = IL.visualize.reconstruct_surface_marching_cubes(model, domain, DEVICE, res=512, batch_size=2**16, use_tqdm=True, full_precision=True)

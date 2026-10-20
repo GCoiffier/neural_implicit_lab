@@ -14,7 +14,7 @@ def test_save_and_load():
     with torch.no_grad():
         out1 = model(inputs).numpy()
         model.save("_test_model.inr")
-        model = IL.nn.load_model("_test_model.inr", "cpu")
+        model = IL.load_model("_test_model.inr", "cpu")
         out2 = model(inputs).detach().numpy()
         assert np.linalg.norm(out1-out2)<1e-14
         try:

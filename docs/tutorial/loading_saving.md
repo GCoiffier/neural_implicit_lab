@@ -20,7 +20,7 @@ Loading from a file on the disk is also very simple:
 
 ```python
 import implicitlab as IL
-model = IL.nn.load_model("path/to/model.inr")
+model = IL.load_model("path/to/model.inr")
 model = IL.nn.ImplicitModel.load("path/to/model.inr") # equivalent call
 ```
 
@@ -41,6 +41,6 @@ class MyCustomModel(IL.nn.ImplicitModel):
 
 mod = MyCustomModel(...)
 mod.save("model.inr")
-mod2 = IL.nn.load_model("model.inr")
+mod2 = IL.load_model("model.inr")
 ```
 will work with no issues. Loading a `MyCustomModel` object will also work from another file in another python session _as long as the path to the class definition is available from the script it is loaded in_.
